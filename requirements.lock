@@ -8,12 +8,61 @@
 #   with-sources: false
 
 asgiref==3.8.1
+    # via daphne
     # via django
+attrs==23.2.0
+    # via automat
+    # via service-identity
+    # via twisted
+autobahn==23.6.2
+    # via daphne
+automat==22.10.0
+    # via twisted
+cffi==1.16.0
+    # via cryptography
+constantly==23.10.4
+    # via twisted
+cryptography==42.0.5
+    # via autobahn
+    # via pyopenssl
+    # via service-identity
+daphne==4.1.2
 django==5.0.4
+hyperlink==21.0.0
+    # via autobahn
+    # via twisted
+idna==3.7
+    # via hyperlink
+    # via twisted
+incremental==22.10.0
+    # via twisted
 psycopg==3.1.18
 psycopg-binary==3.1.18
     # via psycopg
+pyasn1==0.6.0
+    # via pyasn1-modules
+    # via service-identity
+pyasn1-modules==0.4.0
+    # via service-identity
+pycparser==2.22
+    # via cffi
+pyopenssl==24.1.0
+    # via twisted
+service-identity==24.1.0
+    # via twisted
+setuptools==69.5.1
+    # via autobahn
+    # via zope-interface
+six==1.16.0
+    # via automat
 sqlparse==0.5.0
     # via django
+twisted==24.3.0
+    # via daphne
+txaio==23.1.1
+    # via autobahn
 typing-extensions==4.11.0
     # via psycopg
+    # via twisted
+zope-interface==6.3
+    # via twisted
