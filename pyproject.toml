@@ -1,0 +1,18 @@
+[project]
+name = "getogrand-hypermedia"
+version = "0.1.0"
+description = "getogrand's hypermedia collection"
+authors = [{ name = "Wonyoung Ju", email = "getogrand@hey.com" }]
+dependencies = ["django>=5.0.4", "psycopg[binary]>=3.1.18"]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[tool.rye]
+managed = true
+virtual = true
+dev-dependencies = []
+
+[tool.rye.scripts]
+dev = "podman compose up app-dev"
+manage = "podman compose run app-dev python manage.py"
+shell = "podman compose run app-dev python manage.py shell"

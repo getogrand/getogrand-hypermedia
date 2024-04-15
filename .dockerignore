@@ -1,0 +1,9 @@
+.ruff_cache/
+.venv/
+.dockerignore
+.gitignore
+.python-version
+Dockerfile
+pyproject.toml
+README.md
+.env
