@@ -3,7 +3,9 @@ services:
     depends_on:
       - db
     container_name: getogrand-hypermedia-app-dev
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfiles/app.Dockerfile
     command: sh -c "python manage.py runserver 0.0.0.0:8000"
     ports:
       - 8000:8000
@@ -18,17 +20,60 @@ services:
     secrets:
       - django-secret-key
       - db-password
+  app-prod:
+    depends_on:
+      - db
+    container_name: getogrand-hypermedia-app-prod
+    build:
+      context: .
+      dockerfile: dockerfiles/app.Dockerfile
+    command: sh -c "daphne -b 0.0.0.0 -p 8000 -v 2 getogrand_hypermedia.asgi:application"
+    ports:
+      - 8000:8000
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      SECRET_KEY: /run/secrets/django-secret-key
+      DEBUG: ${DEBUG}
+      DB_PASSWORD: /run/secrets/db-password
+      DB_HOST: ${DB_HOST}
+    secrets:
+      - django-secret-key
+      - db-password
+    restart: unless-stopped
+  proxy-prod:
+    depends_on:
+      - app-prod
+    container_name: getogrand-hypermedia-proxy-prod
+    build:
+      context: .
+      dockerfile: dockerfiles/caddy.Dockerfile
+    ports:
+      - 80:8000
+      - 443:8443
+      - 443:8443/udp
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - proxy-data:/data
+      - proxy-config:/config
+      - $PWD/Caddyfile:/etc/caddy/Caddyfile
+    restart: unless-stopped
   db:
     container_name: getogrand-hypermedia-db
-    image: postgres:16-alpine
+    build:
+      context: .
+      dockerfile: dockerfiles/postgres.Dockerfile
     ports:
       - 5432:5432
     volumes:
       - db-volume:/var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD=/run/secrets/db-password
+      POSTGRES_PASSWORD: /run/secrets/db-password
     secrets:
       - db-password
+    restart: unless-stopped
 secrets:
   django-secret-key:
     environment: "DJANGO_SECRET_KEY"
@@ -36,3 +81,5 @@ secrets:
     environment: "DB_PASSWORD"
 volumes:
   db-volume:
+  proxy-data:
+  proxy-config:

@@ -3,6 +3,14 @@ FROM --platform=arm64 python:3.12-alpine
 EXPOSE 8000
 WORKDIR /app
 
+# Set Timezone
+ENV TZ=Asia/Seoul
+RUN <<EOF
+  set -eux;
+  apk add --no-cache tzdata;
+EOF
+
+# Install Python Dependencies
 COPY ./requirements.lock ./
 RUN --mount=type=cache,target=/root/.cache/pip <<EOF
   set -eux;

@@ -14,5 +14,6 @@ dev-dependencies = []
 
 [tool.rye.scripts]
 dev = "podman compose up app-dev"
+prod = "podman compose up app-prod"
 manage = "podman compose run app-dev python manage.py"
 shell = "podman compose run app-dev python manage.py shell"
