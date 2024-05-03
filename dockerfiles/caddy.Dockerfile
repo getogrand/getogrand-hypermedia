@@ -7,3 +7,5 @@ RUN <<EOF
   set -eux;
   apk add --no-cache tzdata;
 EOF
+
+COPY ./Caddyfile /etc/caddy/Caddyfile

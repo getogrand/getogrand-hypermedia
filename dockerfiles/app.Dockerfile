@@ -18,3 +18,5 @@ RUN --mount=type=cache,target=/root/.cache/pip <<EOF
   PYTHONDONTWRITEBYTECODE=1 pip install --no-cache-dir -r requirements.lock;
   apk del --no-network .build-deps;
 EOF
+
+COPY . .

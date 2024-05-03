@@ -1,17 +1,13 @@
 services:
-  app-dev:
+  app:
     depends_on:
       - db
-    container_name: getogrand-hypermedia-app-dev
     build:
       context: .
       dockerfile: dockerfiles/app.Dockerfile
-    command: sh -c "python manage.py runserver 0.0.0.0:8000"
     ports:
       - 8000:8000
     working_dir: /app
-    volumes:
-      - ./:/app
     environment:
       SECRET_KEY: /run/secrets/django-secret-key
       DEBUG: ${DEBUG}
@@ -20,32 +16,9 @@ services:
     secrets:
       - django-secret-key
       - db-password
-  app-prod:
+  proxy:
     depends_on:
-      - db
-    container_name: getogrand-hypermedia-app-prod
-    build:
-      context: .
-      dockerfile: dockerfiles/app.Dockerfile
-    command: sh -c "daphne -b 0.0.0.0 -p 8000 -v 2 getogrand_hypermedia.asgi:application"
-    ports:
-      - 8000:8000
-    working_dir: /app
-    volumes:
-      - ./:/app
-    environment:
-      SECRET_KEY: /run/secrets/django-secret-key
-      DEBUG: ${DEBUG}
-      DB_PASSWORD: /run/secrets/db-password
-      DB_HOST: ${DB_HOST}
-    secrets:
-      - django-secret-key
-      - db-password
-    restart: unless-stopped
-  proxy-prod:
-    depends_on:
-      - app-prod
-    container_name: getogrand-hypermedia-proxy-prod
+      - app
     build:
       context: .
       dockerfile: dockerfiles/caddy.Dockerfile
@@ -58,10 +31,8 @@ services:
     volumes:
       - proxy-data:/data
       - proxy-config:/config
-      - $PWD/Caddyfile:/etc/caddy/Caddyfile
     restart: unless-stopped
   db:
-    container_name: getogrand-hypermedia-db
     build:
       context: .
       dockerfile: dockerfiles/postgres.Dockerfile
