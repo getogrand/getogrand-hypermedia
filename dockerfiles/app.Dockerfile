@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM --platform=arm64 python:3.12-alpine
+FROM python:3.12-alpine
 EXPOSE 8000
 WORKDIR /app
 

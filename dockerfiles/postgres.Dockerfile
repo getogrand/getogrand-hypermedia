@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM --platform=arm64 postgres:16-alpine
+FROM postgres:16-alpine
 
 # Set Timezone
 ENV TZ=Asia/Seoul

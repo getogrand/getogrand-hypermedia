@@ -10,11 +10,12 @@ requires-python = ">= 3.8"
 [tool.rye]
 managed = true
 virtual = true
-dev-dependencies = [
-]
+dev-dependencies = []
 
 [tool.rye.scripts]
-dev = "podman compose -f compose.base.yaml -f compose.local.yaml up"
-prod = "podman compose up -f compose.base.yaml -f compose.prod.yaml"
-manage = "podman compose -f compose.base.yaml -f compose.local.yaml run app python manage.py"
-shell = "podman compose -f compose.base.yaml -f compose.local.yaml run app python manage.py shell"
+dev = "docker compose -f compose.base.yaml -f compose.local.yaml up"
+prod = "docker compose up -f compose.base.yaml -f compose.prod.yaml"
+manage = "docker compose -f compose.base.yaml -f compose.local.yaml run app python manage.py"
+shell = "docker compose -f compose.base.yaml -f compose.local.yaml run app python manage.py shell"
+build = "docker compose -f compose.base.yaml -f compose.prod.yaml build"
+push = "docker compose -f compose.base.yaml -f compose.prod.yaml push"

@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM --platform=arm64 caddy:2-alpine
+FROM caddy:2-alpine
 
 # Set Timezone
 ENV TZ=Asia/Seoul
