@@ -12,16 +12,29 @@ asgiref==3.8.1
     # via django
 attrs==23.2.0
     # via automat
+    # via cattrs
+    # via jsii
     # via service-identity
     # via twisted
 autobahn==23.6.2
     # via daphne
 automat==22.10.0
     # via twisted
+aws-cdk-asset-awscli-v1==2.2.202
+    # via aws-cdk-lib
+aws-cdk-asset-kubectl-v20==2.1.2
+    # via aws-cdk-lib
+aws-cdk-asset-node-proxy-agent-v6==2.0.3
+    # via aws-cdk-lib
+aws-cdk-lib==2.140.0
+cattrs==23.2.3
+    # via jsii
 cffi==1.16.0
     # via cryptography
 constantly==23.10.4
     # via twisted
+constructs==10.3.0
+    # via aws-cdk-lib
 cryptography==42.0.5
     # via autobahn
     # via pyopenssl
@@ -34,11 +47,26 @@ hyperlink==21.0.0
 idna==3.7
     # via hyperlink
     # via twisted
+importlib-resources==6.4.0
+    # via jsii
 incremental==22.10.0
     # via twisted
+jsii==1.98.0
+    # via aws-cdk-asset-awscli-v1
+    # via aws-cdk-asset-kubectl-v20
+    # via aws-cdk-asset-node-proxy-agent-v6
+    # via aws-cdk-lib
+    # via constructs
 psycopg==3.1.18
 psycopg-binary==3.1.18
     # via psycopg
+publication==0.0.3
+    # via aws-cdk-asset-awscli-v1
+    # via aws-cdk-asset-kubectl-v20
+    # via aws-cdk-asset-node-proxy-agent-v6
+    # via aws-cdk-lib
+    # via constructs
+    # via jsii
 pyasn1==0.6.0
     # via pyasn1-modules
     # via service-identity
@@ -48,6 +76,8 @@ pycparser==2.22
     # via cffi
 pyopenssl==24.1.0
     # via twisted
+python-dateutil==2.9.0.post0
+    # via jsii
 service-identity==24.1.0
     # via twisted
 setuptools==69.5.1
@@ -55,13 +85,22 @@ setuptools==69.5.1
     # via zope-interface
 six==1.16.0
     # via automat
+    # via python-dateutil
 sqlparse==0.5.0
     # via django
 twisted==24.3.0
     # via daphne
 txaio==23.1.1
     # via autobahn
+typeguard==2.13.3
+    # via aws-cdk-asset-awscli-v1
+    # via aws-cdk-asset-kubectl-v20
+    # via aws-cdk-asset-node-proxy-agent-v6
+    # via aws-cdk-lib
+    # via constructs
+    # via jsii
 typing-extensions==4.11.0
+    # via jsii
     # via psycopg
     # via twisted
 zope-interface==6.3

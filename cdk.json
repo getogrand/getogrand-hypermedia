@@ -1,0 +1,4 @@
+{
+  "$schema": "https://json.schemastore.org/cdk.json",
+  "app": "python cdkapp.py"
+}
