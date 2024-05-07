@@ -25,8 +25,8 @@ class DbService(Construct):
         secret: secretsmanager.ISecret,
     ) -> None:
         super().__init__(scope, id)
-        vpc = cluster.vpc
-        task_def = ecs.FargateTaskDefinition(
+        self.vpc = cluster.vpc
+        self.task_def = ecs.FargateTaskDefinition(
             scope=self,
             id="TaskDef",
             cpu=256,
@@ -47,14 +47,14 @@ class DbService(Construct):
                 )
             ],
         )
-        img_repo = ecr.Repository.from_repository_arn(
+        self.img_repo = ecr.Repository.from_repository_arn(
             scope=self,
             id="ImageRepo",
             repository_arn="arn:aws:ecr:ap-northeast-2:730335367003:repository/getogrand-hypermedia/db",
         )
-        container = task_def.add_container(
+        self.container = self.task_def.add_container(
             id="Container",
-            image=ecs.ContainerImage.from_ecr_repository(img_repo),
+            image=ecs.ContainerImage.from_ecr_repository(self.img_repo),
             health_check=ecs.HealthCheck(
                 command=["CMD-SHELL", "pg_isready -U postgres"]
             ),
@@ -71,17 +71,17 @@ class DbService(Construct):
                 )
             },
         )
-        container.add_mount_points(
+        self.container.add_mount_points(
             ecs.MountPoint(
                 container_path="/var/lib/postgresql/data",
                 read_only=False,
                 source_volume="db-volume",
             )
         )
-        service = ecs.FargateService(
+        self.service = ecs.FargateService(
             scope=self,
             id="Service",
-            task_definition=task_def,
+            task_definition=self.task_def,
             vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
             cluster=cluster,
             deployment_controller=ecs.DeploymentController(
@@ -94,14 +94,14 @@ class DbService(Construct):
                 ecs.CapacityProviderStrategy(capacity_provider="FARGATE_SPOT", weight=1)
             ],
         )
-        service.enable_cloud_map(
+        self.service.enable_cloud_map(
             container_port=5432,
             name="db",
         )
-        service.connections.allow_from(
-            ec2.Peer.ipv4(vpc.vpc_cidr_block), ec2.Port.POSTGRES
+        self.service.connections.allow_from(
+            ec2.Peer.ipv4(self.vpc.vpc_cidr_block), ec2.Port.POSTGRES
         )
-        file_system.connections.allow_from(service.connections, ec2.Port.NFS)
+        file_system.connections.allow_from(self.service.connections, ec2.Port.NFS)
 
         # db_lb = elb.NetworkLoadBalancer(
         #     scope=self, id="DbElb", vpc=vpc, internet_facing=False
