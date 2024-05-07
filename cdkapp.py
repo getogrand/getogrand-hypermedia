@@ -13,6 +13,133 @@ from aws_cdk import (
 from constructs import Construct
 
 
+class DbService(Construct):
+    def __init__(
+        self,
+        scope: Construct,
+        id: str,
+        cluster: ecs.ICluster,
+        task_exec_role: iam.Role,
+        task_role: iam.Role,
+        file_system: efs.FileSystem,
+        secret: secretsmanager.ISecret,
+    ) -> None:
+        super().__init__(scope, id)
+        vpc = cluster.vpc
+        task_def = ecs.FargateTaskDefinition(
+            scope=self,
+            id="TaskDef",
+            cpu=256,
+            memory_limit_mib=512,
+            runtime_platform=ecs.RuntimePlatform(
+                cpu_architecture=ecs.CpuArchitecture.X86_64,
+                operating_system_family=ecs.OperatingSystemFamily.LINUX,
+            ),
+            family="GetograndHypermedia",
+            execution_role=task_exec_role,  # type: ignore
+            task_role=task_role,  # type: ignore
+            volumes=[
+                ecs.Volume(
+                    name="db-volume",
+                    efs_volume_configuration=ecs.EfsVolumeConfiguration(
+                        file_system_id=file_system.file_system_id
+                    ),
+                )
+            ],
+        )
+        img_repo = ecr.Repository.from_repository_arn(
+            scope=self,
+            id="ImageRepo",
+            repository_arn="arn:aws:ecr:ap-northeast-2:730335367003:repository/getogrand-hypermedia/db",
+        )
+        container = task_def.add_container(
+            id="Container",
+            image=ecs.ContainerImage.from_ecr_repository(img_repo),
+            health_check=ecs.HealthCheck(
+                command=["CMD-SHELL", "pg_isready -U postgres"]
+            ),
+            logging=ecs.LogDrivers.aws_logs(stream_prefix="ecs"),
+            memory_limit_mib=512,
+            port_mappings=[
+                ecs.PortMapping(
+                    container_port=5432, host_port=5432, protocol=ecs.Protocol.TCP
+                )
+            ],
+            secrets={
+                "POSTGRES_PASSWORD": ecs.Secret.from_secrets_manager(
+                    secret=secret, field="db-password"
+                )
+            },
+        )
+        container.add_mount_points(
+            ecs.MountPoint(
+                container_path="/var/lib/postgresql/data",
+                read_only=False,
+                source_volume="db-volume",
+            )
+        )
+        service = ecs.FargateService(
+            scope=self,
+            id="Service",
+            task_definition=task_def,
+            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
+            cluster=cluster,
+            deployment_controller=ecs.DeploymentController(
+                type=ecs.DeploymentControllerType.ECS
+            ),
+            desired_count=1,
+            enable_execute_command=True,
+            assign_public_ip=True,
+            capacity_provider_strategies=[
+                ecs.CapacityProviderStrategy(capacity_provider="FARGATE_SPOT", weight=1)
+            ],
+        )
+        service.enable_cloud_map(
+            container_port=5432,
+            name="db",
+        )
+        service.connections.allow_from(
+            ec2.Peer.ipv4(vpc.vpc_cidr_block), ec2.Port.POSTGRES
+        )
+        file_system.connections.allow_from(service.connections, ec2.Port.NFS)
+
+        # db_lb = elb.NetworkLoadBalancer(
+        #     scope=self, id="DbElb", vpc=vpc, internet_facing=False
+        # )
+        # blue_target_group = elb.NetworkTargetGroup(
+        #     scope=self,
+        #     id="BlueTargetGroup",
+        #     target_type=elb.TargetType.IP,
+        #     port=5432,
+        #     protocol=elb.Protocol.TCP,
+        #     vpc=vpc,
+        # )
+        # green_target_group = elb.NetworkTargetGroup(
+        #     scope=self,
+        #     id="GreenTargetGroup",
+        #     target_type=elb.TargetType.IP,
+        #     port=5432,
+        #     protocol=elb.Protocol.TCP,
+        #     vpc=vpc,
+        # )
+        # listener = db_lb.add_listener(
+        #     id="Listener", port=5432, default_target_groups=[blue_target_group]
+        # )
+        # db_service.attach_to_network_target_group(blue_target_group)
+        # deploy_app = codedeploy.EcsApplication(scope=self, id="DbCodedeployApp")
+        # deploy_group = codedeploy.EcsDeploymentGroup(
+        #     scope=self,
+        #     id="DbCodedeployGroup",
+        #     blue_green_deployment_config=codedeploy.EcsBlueGreenDeploymentConfig(
+        #         blue_target_group=blue_target_group,
+        #         green_target_group=green_target_group,
+        #         listener=listener,
+        #     ),
+        #     service=db_service,
+        #     application=deploy_app,
+        # )
+
+
 class HypermediaStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs):
         super().__init__(scope, id, **kwargs)
@@ -142,118 +269,15 @@ class HypermediaStack(Stack):
         )
         task_exec_role_policy.attach_to_role(task_exec_role)  # type: ignore
 
-        db_task_def = ecs.FargateTaskDefinition(
-            scope=self,
-            id="DbTaskDef",
-            cpu=256,
-            memory_limit_mib=512,
-            runtime_platform=ecs.RuntimePlatform(
-                cpu_architecture=ecs.CpuArchitecture.X86_64,
-                operating_system_family=ecs.OperatingSystemFamily.LINUX,
-            ),
-            family="GetograndHypermedia",
-            execution_role=task_exec_role,  # type: ignore
-            task_role=task_role,  # type: ignore
-            volumes=[
-                ecs.Volume(
-                    name="db-volume",
-                    efs_volume_configuration=ecs.EfsVolumeConfiguration(
-                        file_system_id=file_system.file_system_id
-                    ),
-                )
-            ],
-        )
-        db_img_repo = ecr.Repository.from_repository_arn(
-            scope=self,
-            id="DbImageRepo",
-            repository_arn="arn:aws:ecr:ap-northeast-2:730335367003:repository/getogrand-hypermedia/db",
-        )
-        db_container = db_task_def.add_container(
-            id="DbContainer",
-            image=ecs.ContainerImage.from_ecr_repository(db_img_repo),
-            health_check=ecs.HealthCheck(
-                command=["CMD-SHELL", "pg_isready -U postgres"]
-            ),
-            logging=ecs.LogDrivers.aws_logs(stream_prefix="ecs"),
-            memory_limit_mib=512,
-            port_mappings=[
-                ecs.PortMapping(
-                    container_port=5432, host_port=5432, protocol=ecs.Protocol.TCP
-                )
-            ],
-            secrets={
-                "POSTGRES_PASSWORD": ecs.Secret.from_secrets_manager(
-                    secret=secret, field="db-password"
-                )
-            },
-        )
-        db_container.add_mount_points(
-            ecs.MountPoint(
-                container_path="/var/lib/postgresql/data",
-                read_only=False,
-                source_volume="db-volume",
-            )
-        )
-        db_service = ecs.FargateService(
+        db_service = DbService(
             scope=self,
             id="DbService",
-            task_definition=db_task_def,
-            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
             cluster=cluster,
-            deployment_controller=ecs.DeploymentController(
-                type=ecs.DeploymentControllerType.ECS
-            ),
-            desired_count=1,
-            enable_execute_command=True,
-            assign_public_ip=True,
-            capacity_provider_strategies=[
-                ecs.CapacityProviderStrategy(capacity_provider="FARGATE_SPOT", weight=1)
-            ],
+            task_exec_role=task_exec_role,
+            task_role=task_role,
+            file_system=file_system,
+            secret=secret,
         )
-        db_service.enable_cloud_map(
-            cloud_map_namespace=cluster.default_cloud_map_namespace,
-            container_port=5432,
-            name="db",
-        )
-        db_service.connections.allow_from(
-            ec2.Peer.ipv4(vpc.vpc_cidr_block), ec2.Port.POSTGRES
-        )
-        file_system.connections.allow_from(db_service.connections, ec2.Port.NFS)
-        # db_lb = elb.NetworkLoadBalancer(
-        #     scope=self, id="DbElb", vpc=vpc, internet_facing=False
-        # )
-        # blue_target_group = elb.NetworkTargetGroup(
-        #     scope=self,
-        #     id="BlueTargetGroup",
-        #     target_type=elb.TargetType.IP,
-        #     port=5432,
-        #     protocol=elb.Protocol.TCP,
-        #     vpc=vpc,
-        # )
-        # green_target_group = elb.NetworkTargetGroup(
-        #     scope=self,
-        #     id="GreenTargetGroup",
-        #     target_type=elb.TargetType.IP,
-        #     port=5432,
-        #     protocol=elb.Protocol.TCP,
-        #     vpc=vpc,
-        # )
-        # listener = db_lb.add_listener(
-        #     id="Listener", port=5432, default_target_groups=[blue_target_group]
-        # )
-        # db_service.attach_to_network_target_group(blue_target_group)
-        # deploy_app = codedeploy.EcsApplication(scope=self, id="DbCodedeployApp")
-        # deploy_group = codedeploy.EcsDeploymentGroup(
-        #     scope=self,
-        #     id="DbCodedeployGroup",
-        #     blue_green_deployment_config=codedeploy.EcsBlueGreenDeploymentConfig(
-        #         blue_target_group=blue_target_group,
-        #         green_target_group=green_target_group,
-        #         listener=listener,
-        #     ),
-        #     service=db_service,
-        #     application=deploy_app,
-        # )
 
 
 app = App()
