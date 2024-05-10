@@ -82,14 +82,15 @@ class DbService(Construct):
             scope=self,
             id="Service",
             task_definition=self.task_def,
-            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
+            vpc_subnets=ec2.SubnetSelection(
+                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+            ),
             cluster=cluster,
             deployment_controller=ecs.DeploymentController(
                 type=ecs.DeploymentControllerType.ECS
             ),
             desired_count=1,
             enable_execute_command=True,
-            assign_public_ip=True,
             capacity_provider_strategies=[
                 ecs.CapacityProviderStrategy(capacity_provider="FARGATE_SPOT", weight=1)
             ],
@@ -143,7 +144,7 @@ class DbService(Construct):
 class HypermediaStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs):
         super().__init__(scope, id, **kwargs)
-        vpc = ec2.Vpc(
+        self.vpc = ec2.Vpc(
             scope=self,
             id="Vpc",
             create_internet_gateway=True,
@@ -165,16 +166,22 @@ class HypermediaStack(Stack):
                 ),
             ],
         )
-        vpc.add_interface_endpoint(
+
+        self.vpc.add_interface_endpoint(
+            id="EndpointECR", service=ec2.InterfaceVpcEndpointAwsService.ECR
+        )
+        self.vpc.add_interface_endpoint(
+            id="EndpointECRDKR", service=ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER
+        )
+        self.vpc.add_interface_endpoint(
             id="EndpointSsmMessages",
             service=ec2.InterfaceVpcEndpointAwsService.SSM_MESSAGES,
-            subnets=ec2.SubnetSelection(),
         )
-        vpc.add_interface_endpoint(
+        self.vpc.add_interface_endpoint(
             id="EndpointLogs",
             service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
         )
-        vpc.add_interface_endpoint(
+        self.vpc.add_interface_endpoint(
             id="EndpointSecretsManager",
             service=ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
         )
@@ -187,12 +194,12 @@ class HypermediaStack(Stack):
             ),
             enable_fargate_capacity_providers=True,
             execute_command_configuration=ecs.ExecuteCommandConfiguration(),
-            vpc=vpc,
+            vpc=self.vpc,
         )
         cluster.add_default_capacity_provider_strategy(
             [ecs.CapacityProviderStrategy(capacity_provider="FARGATE_SPOT", weight=1)]
         )
-        file_system = efs.FileSystem(scope=self, id="Efs", vpc=vpc)
+        file_system = efs.FileSystem(scope=self, id="Efs", vpc=self.vpc)
         task_role_policy = iam.Policy(
             scope=self,
             id="EcsTaskRolePolicy",
