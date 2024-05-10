@@ -54,6 +54,7 @@ class DbService(Construct):
         )
         self.container = self.task_def.add_container(
             id="Container",
+            container_name="getogrand-hypermedia-db",
             image=ecs.ContainerImage.from_ecr_repository(self.img_repo),
             health_check=ecs.HealthCheck(
                 command=["CMD-SHELL", "pg_isready -U postgres"]
@@ -81,13 +82,14 @@ class DbService(Construct):
         self.service = ecs.FargateService(
             scope=self,
             id="Service",
+            service_name="getogrand-hypermedia-db",
             task_definition=self.task_def,
             vpc_subnets=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
             ),
             cluster=cluster,
             deployment_controller=ecs.DeploymentController(
-                type=ecs.DeploymentControllerType.ECS
+                type=ecs.DeploymentControllerType.CODE_DEPLOY
             ),
             desired_count=1,
             enable_execute_command=True,
@@ -104,41 +106,50 @@ class DbService(Construct):
         )
         file_system.connections.allow_from(self.service.connections, ec2.Port.NFS)
 
-        # db_lb = elb.NetworkLoadBalancer(
-        #     scope=self, id="DbElb", vpc=vpc, internet_facing=False
-        # )
-        # blue_target_group = elb.NetworkTargetGroup(
-        #     scope=self,
-        #     id="BlueTargetGroup",
-        #     target_type=elb.TargetType.IP,
-        #     port=5432,
-        #     protocol=elb.Protocol.TCP,
-        #     vpc=vpc,
-        # )
-        # green_target_group = elb.NetworkTargetGroup(
-        #     scope=self,
-        #     id="GreenTargetGroup",
-        #     target_type=elb.TargetType.IP,
-        #     port=5432,
-        #     protocol=elb.Protocol.TCP,
-        #     vpc=vpc,
-        # )
-        # listener = db_lb.add_listener(
-        #     id="Listener", port=5432, default_target_groups=[blue_target_group]
-        # )
-        # db_service.attach_to_network_target_group(blue_target_group)
-        # deploy_app = codedeploy.EcsApplication(scope=self, id="DbCodedeployApp")
-        # deploy_group = codedeploy.EcsDeploymentGroup(
-        #     scope=self,
-        #     id="DbCodedeployGroup",
-        #     blue_green_deployment_config=codedeploy.EcsBlueGreenDeploymentConfig(
-        #         blue_target_group=blue_target_group,
-        #         green_target_group=green_target_group,
-        #         listener=listener,
-        #     ),
-        #     service=db_service,
-        #     application=deploy_app,
-        # )
+        self.load_balancer = elb.NetworkLoadBalancer(
+            scope=self,
+            id="Elb",
+            load_balancer_name="getogrand-hypermedia-db",
+            vpc=self.vpc,
+            internet_facing=False,
+        )
+        self.blue_target_group = elb.NetworkTargetGroup(
+            scope=self,
+            id="BlueTargetGroup",
+            target_group_name="getogrand-hypermedia-db-blue",
+            target_type=elb.TargetType.IP,
+            port=5432,
+            protocol=elb.Protocol.TCP,
+            vpc=self.vpc,
+        )
+        self.green_target_group = elb.NetworkTargetGroup(
+            scope=self,
+            id="GreenTargetGroup",
+            target_group_name="getogrand-hypermedia-db-green",
+            target_type=elb.TargetType.IP,
+            port=5432,
+            protocol=elb.Protocol.TCP,
+            vpc=self.vpc,
+        )
+        self.listener = self.load_balancer.add_listener(
+            id="Listener", port=5432, default_target_groups=[self.blue_target_group]
+        )
+        self.service.attach_to_network_target_group(self.blue_target_group)
+        self.deploy_app = codedeploy.EcsApplication(
+            scope=self, id="DbCodedeployApp", application_name="getogrand-hypermedia-db"
+        )
+        self.deploy_group = codedeploy.EcsDeploymentGroup(
+            scope=self,
+            id="DbCodedeployGroup",
+            deployment_group_name="getogrand-hypermedia-db",
+            blue_green_deployment_config=codedeploy.EcsBlueGreenDeploymentConfig(
+                blue_target_group=self.blue_target_group,
+                green_target_group=self.green_target_group,
+                listener=self.listener,
+            ),
+            service=self.service,
+            application=self.deploy_app,
+        )
 
 
 class HypermediaStack(Stack):
@@ -147,6 +158,7 @@ class HypermediaStack(Stack):
         self.vpc = ec2.Vpc(
             scope=self,
             id="Vpc",
+            vpc_name="getogrand-hypermedia",
             create_internet_gateway=True,
             enable_dns_hostnames=True,
             enable_dns_support=True,
@@ -185,9 +197,18 @@ class HypermediaStack(Stack):
             id="EndpointSecretsManager",
             service=ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
         )
+        self.vpc.add_interface_endpoint(
+            id="EndpointLoadBalancing",
+            service=ec2.InterfaceVpcEndpointAwsService.ELASTIC_LOAD_BALANCING,
+        )
+        self.vpc.add_interface_endpoint(
+            id="EndpointCodeDeploy",
+            service=ec2.InterfaceVpcEndpointAwsService.CODEDEPLOY,
+        )
         cluster = ecs.Cluster(
             scope=self,
             id="EcsCluster",
+            cluster_name="getogrand-hypermedia",
             container_insights=True,
             default_cloud_map_namespace=ecs.CloudMapNamespaceOptions(
                 name="getogrand-hypermedia"
@@ -199,10 +220,13 @@ class HypermediaStack(Stack):
         cluster.add_default_capacity_provider_strategy(
             [ecs.CapacityProviderStrategy(capacity_provider="FARGATE_SPOT", weight=1)]
         )
-        file_system = efs.FileSystem(scope=self, id="Efs", vpc=self.vpc)
+        file_system = efs.FileSystem(
+            scope=self, id="Efs", file_system_name="getogrand-hypermedia", vpc=self.vpc
+        )
         task_role_policy = iam.Policy(
             scope=self,
             id="EcsTaskRolePolicy",
+            policy_name="getogrand-hypermedia-ecs-task-role",
             document=iam.PolicyDocument(
                 statements=[
                     iam.PolicyStatement(
@@ -235,17 +259,19 @@ class HypermediaStack(Stack):
         task_role = iam.Role(
             scope=self,
             id="EcsTaskRole",
+            role_name="getogrand-hypermedia-ecs-task-role",
             assumed_by=iam.ServicePrincipal(service="ecs-tasks.amazonaws.com"),  # type: ignore
         )
         task_role_policy.attach_to_role(task_role)  # type: ignore
         secret = secretsmanager.Secret.from_secret_complete_arn(
-            self,
-            "Secret",
-            "arn:aws:secretsmanager:ap-northeast-2:730335367003:secret:getogrand-hypermedia-ImNX6Q",
+            scope=self,
+            id="Secret",
+            secret_complete_arn="arn:aws:secretsmanager:ap-northeast-2:730335367003:secret:getogrand-hypermedia-ImNX6Q",
         )
         task_exec_role_policy = iam.Policy(
             scope=self,
             id="EcsTaskExecRolePolicy",
+            policy_name="getogrand-hypermedia-ecs-task-exec-role",
             document=iam.PolicyDocument(
                 statements=[
                     iam.PolicyStatement(
@@ -272,11 +298,12 @@ class HypermediaStack(Stack):
         task_exec_role = iam.Role(
             scope=self,
             id="EcsTaskExecRole",
+            role_name="getogrand-hypermedia-ecs-task-exec-role",
             assumed_by=iam.ServicePrincipal(service="ecs-tasks.amazonaws.com"),  # type: ignore
         )
         task_exec_role_policy.attach_to_role(task_exec_role)  # type: ignore
 
-        db_service = DbService(
+        self.db_service = DbService(
             scope=self,
             id="DbService",
             cluster=cluster,
