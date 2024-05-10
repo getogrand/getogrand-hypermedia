@@ -152,6 +152,94 @@ class DbService(Construct):
         )
 
 
+class AppService(Construct):
+    def __init__(
+        self,
+        scope: Construct,
+        id: str,
+        cluster: ecs.ICluster,
+        task_exec_role: iam.Role,
+        task_role: iam.Role,
+        secret: secretsmanager.ISecret,
+    ) -> None:
+        super().__init__(scope, id)
+        self.vpc = cluster.vpc
+        self.task_def = ecs.FargateTaskDefinition(
+            scope=self,
+            id="TaskDef",
+            cpu=256,
+            memory_limit_mib=512,
+            runtime_platform=ecs.RuntimePlatform(
+                cpu_architecture=ecs.CpuArchitecture.X86_64,
+                operating_system_family=ecs.OperatingSystemFamily.LINUX,
+            ),
+            family="GetograndHypermedia",
+            execution_role=task_exec_role,  # type: ignore
+            task_role=task_role,  # type: ignore
+        )
+        self.img_repo = ecr.Repository.from_repository_arn(
+            scope=self,
+            id="ImageRepo",
+            repository_arn="arn:aws:ecr:ap-northeast-2:730335367003:repository/getogrand-hypermedia/app",
+        )
+        self.container = self.task_def.add_container(
+            id="Container",
+            container_name="getogrand-hypermedia-app",
+            image=ecs.ContainerImage.from_ecr_repository(self.img_repo),
+            health_check=ecs.HealthCheck(
+                command=["CMD-SHELL", "wget --quiet --spider http://localhost:8000"]
+            ),
+            logging=ecs.LogDrivers.aws_logs(stream_prefix="ecs"),
+            memory_limit_mib=512,
+            port_mappings=[
+                ecs.PortMapping(
+                    container_port=8000, host_port=8000, protocol=ecs.Protocol.TCP
+                )
+            ],
+            secrets={
+                "SECRET_KEY": ecs.Secret.from_secrets_manager(
+                    secret=secret, field="django-secret-key"
+                ),
+                "DB_PASSWORD": ecs.Secret.from_secrets_manager(
+                    secret=secret, field="db-password"
+                ),
+            },
+            environment={"DEBUG": "False", "DB_HOST": "db"},
+            working_directory="/app",
+            command=[
+                "daphne",
+                "-b",
+                "0.0.0.0",
+                "-p",
+                "8000",
+                "getogrand_hypermedia.asgi:application",
+            ],
+        )
+        self.service = ecs.FargateService(
+            scope=self,
+            id="Service",
+            service_name="getogrand-hypermedia-app",
+            task_definition=self.task_def,
+            vpc_subnets=ec2.SubnetSelection(
+                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+            ),
+            cluster=cluster,
+            # deployment_controller=
+            desired_count=1,
+            enable_execute_command=True,
+            capacity_provider_strategies=[
+                ecs.CapacityProviderStrategy(capacity_provider="FARGATE_SPOT", weight=1)
+            ],
+        )
+        self.service.enable_cloud_map(
+            container_port=8000,
+            name="app",
+        )
+        self.service.connections.allow_from(
+            ec2.Peer.ipv4(self.vpc.vpc_cidr_block), ec2.Port.HTTP
+        )
+
+
 class HypermediaStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs):
         super().__init__(scope, id, **kwargs)
@@ -310,6 +398,14 @@ class HypermediaStack(Stack):
             task_exec_role=task_exec_role,
             task_role=task_role,
             file_system=file_system,
+            secret=secret,
+        )
+        self.app_service = AppService(
+            scope=self,
+            id="AppService",
+            cluster=cluster,
+            task_exec_role=task_exec_role,
+            task_role=task_role,
             secret=secret,
         )
 
