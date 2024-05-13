@@ -176,13 +176,13 @@ class AppService(Construct):
             id="Container",
             image=ecs.ContainerImage.from_ecr_repository(self.img_repo),
             health_check=ecs.HealthCheck(
-                command=["CMD-SHELL", "wget --quiet --spider http://localhost:8000"]
+                command=["CMD-SHELL", "wget --quiet --spider https://localhost:8443"]
             ),
             logging=ecs.LogDrivers.aws_logs(stream_prefix="ecs"),
             memory_limit_mib=512,
             port_mappings=[
                 ecs.PortMapping(
-                    container_port=8000, host_port=8000, protocol=ecs.Protocol.TCP
+                    container_port=8443, host_port=8443, protocol=ecs.Protocol.TCP
                 )
             ],
             secrets={
@@ -197,10 +197,8 @@ class AppService(Construct):
             working_directory="/app",
             command=[
                 "daphne",
-                "-b",
-                "0.0.0.0",
-                "-p",
-                "8000",
+                "-e",
+                "ssl:8443:interface=0.0.0.0:privateKey=/app/localhost+2-key.pem:certKey=/app/localhost+2.pem",
                 "getogrand_hypermedia.asgi:application",
             ],
         )
@@ -222,16 +220,16 @@ class AppService(Construct):
             ],
         )
         self.service.enable_cloud_map(
-            container_port=8000,
+            container_port=8443,
             name="app",
         )
         self.service.connections.allow_from(
             ec2.Peer.ipv4(self.vpc.vpc_cidr_block),
             ec2.Port(
                 protocol=ec2.Protocol.TCP,
-                string_representation="8000",
-                from_port=8000,
-                to_port=8000,
+                string_representation="8443",
+                from_port=8443,
+                to_port=8443,
             ),
         )
 
@@ -245,7 +243,7 @@ class AppService(Construct):
             scope=self,
             id="BlueTargetGroup",
             target_type=elb.TargetType.IP,
-            port=8000,
+            port=8443,
             protocol=elb.Protocol.TCP,
             vpc=self.vpc,
         )
@@ -253,12 +251,12 @@ class AppService(Construct):
             scope=self,
             id="GreenTargetGroup",
             target_type=elb.TargetType.IP,
-            port=8000,
+            port=8443,
             protocol=elb.Protocol.TCP,
             vpc=self.vpc,
         )
         self.listener = self.load_balancer.add_listener(
-            id="Listener", port=8000, default_target_groups=[self.blue_target_group]
+            id="Listener", port=8443, default_target_groups=[self.blue_target_group]
         )
         self.service.attach_to_network_target_group(self.blue_target_group)
         self.deploy_app = codedeploy.EcsApplication(

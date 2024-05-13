@@ -5,8 +5,6 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/app.Dockerfile
-    ports:
-      - 8000:8000
     working_dir: /app
     environment:
       SECRET_KEY: /run/secrets/django-secret-key

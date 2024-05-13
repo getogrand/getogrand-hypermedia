@@ -28,6 +28,12 @@ cryptography==42.0.5
     # via service-identity
 daphne==4.1.2
 django==5.0.4
+h2==4.1.0
+    # via twisted
+hpack==4.0.0
+    # via h2
+hyperframe==6.0.1
+    # via h2
 hyperlink==21.0.0
     # via autobahn
     # via twisted
@@ -35,6 +41,8 @@ idna==3.7
     # via hyperlink
     # via twisted
 incremental==22.10.0
+    # via twisted
+priority==1.3.0
     # via twisted
 psycopg==3.1.18
 psycopg-binary==3.1.18
