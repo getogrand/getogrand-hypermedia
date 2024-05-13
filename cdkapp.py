@@ -29,6 +29,9 @@ class Service(Construct):
         task_volumes: Sequence[ecs.Volume] | None = None,
         container_port_mappings: Sequence[ecs.PortMapping] | None = None,
         secrets: Mapping[str, ecs.Secret] | None = None,
+        environment: Mapping[str, str] | None = None,
+        working_directory: str | None = None,
+        command: Sequence[str] | None = None,
         mount_points: Sequence[ecs.MountPoint] | None = None,
         discovery_name: str | None = None,
     ):
@@ -61,6 +64,9 @@ class Service(Construct):
             memory_limit_mib=512,
             port_mappings=container_port_mappings,
             secrets=secrets,
+            environment=environment,
+            working_directory=working_directory,
+            command=command,
         )
         if mount_points:
             self.container.add_mount_points(*mount_points)
@@ -195,7 +201,7 @@ class DbService(Service):
         )
 
 
-class AppService(Construct):
+class AppService(Service):
     def __init__(
         self,
         scope: Construct,
@@ -204,35 +210,19 @@ class AppService(Construct):
         task_exec_role: iam.Role,
         task_role: iam.Role,
         secret: secretsmanager.ISecret,
-    ) -> None:
-        super().__init__(scope, id)
-        self.vpc = cluster.vpc
-        self.task_def = ecs.FargateTaskDefinition(
-            scope=self,
-            id="TaskDef",
-            cpu=256,
-            memory_limit_mib=512,
-            runtime_platform=ecs.RuntimePlatform(
-                cpu_architecture=ecs.CpuArchitecture.X86_64,
-                operating_system_family=ecs.OperatingSystemFamily.LINUX,
-            ),
-            execution_role=task_exec_role,  # type: ignore
-            task_role=task_role,  # type: ignore
-        )
-        self.img_repo = ecr.Repository.from_repository_arn(
-            scope=self,
-            id="ImageRepo",
-            repository_arn="arn:aws:ecr:ap-northeast-2:730335367003:repository/getogrand-hypermedia/app",
-        )
-        self.container = self.task_def.add_container(
-            id="Container",
-            image=ecs.ContainerImage.from_ecr_repository(self.img_repo),
-            health_check=ecs.HealthCheck(
+    ):
+        super().__init__(
+            scope=scope,
+            id=id,
+            cluster=cluster,
+            task_exec_role=task_exec_role,
+            task_role=task_role,
+            img_repo_suffix="getogrand-hypermedia/app",
+            exposing_port=8443,
+            container_health_check=ecs.HealthCheck(
                 command=["CMD-SHELL", "wget --quiet --spider https://localhost:8443"]
             ),
-            logging=ecs.LogDrivers.aws_logs(stream_prefix="ecs"),
-            memory_limit_mib=512,
-            port_mappings=[
+            container_port_mappings=[
                 ecs.PortMapping(
                     container_port=8443, host_port=8443, protocol=ecs.Protocol.TCP
                 )
@@ -253,78 +243,7 @@ class AppService(Construct):
                 "ssl:8443:interface=0.0.0.0:privateKey=/app/localhost+2-key.pem:certKey=/app/localhost+2.pem",
                 "getogrand_hypermedia.asgi:application",
             ],
-        )
-        self.service = ecs.FargateService(
-            scope=self,
-            id="Service",
-            task_definition=self.task_def,
-            vpc_subnets=ec2.SubnetSelection(
-                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
-            ),
-            cluster=cluster,
-            deployment_controller=ecs.DeploymentController(
-                type=ecs.DeploymentControllerType.CODE_DEPLOY
-            ),
-            desired_count=1,
-            enable_execute_command=True,
-            capacity_provider_strategies=[
-                ecs.CapacityProviderStrategy(capacity_provider="FARGATE_SPOT", weight=1)
-            ],
-        )
-        self.service.enable_cloud_map(
-            container_port=8443,
-            name="app",
-        )
-        self.service.connections.allow_from(
-            ec2.Peer.ipv4(self.vpc.vpc_cidr_block),
-            ec2.Port(
-                protocol=ec2.Protocol.TCP,
-                string_representation="8443",
-                from_port=8443,
-                to_port=8443,
-            ),
-        )
-
-        self.load_balancer = elb.NetworkLoadBalancer(
-            scope=self,
-            id="Elb",
-            vpc=self.vpc,
-            internet_facing=False,
-        )
-        self.blue_target_group = elb.NetworkTargetGroup(
-            scope=self,
-            id="BlueTargetGroup",
-            target_type=elb.TargetType.IP,
-            port=8443,
-            protocol=elb.Protocol.TCP,
-            vpc=self.vpc,
-        )
-        self.green_target_group = elb.NetworkTargetGroup(
-            scope=self,
-            id="GreenTargetGroup",
-            target_type=elb.TargetType.IP,
-            port=8443,
-            protocol=elb.Protocol.TCP,
-            vpc=self.vpc,
-        )
-        self.listener = self.load_balancer.add_listener(
-            id="Listener", port=8443, default_target_groups=[self.blue_target_group]
-        )
-        self.service.attach_to_network_target_group(self.blue_target_group)
-        self.deploy_app = codedeploy.EcsApplication(
-            scope=self,
-            id="CodedeployApp",
-        )
-        self.deploy_group = codedeploy.EcsDeploymentGroup(
-            scope=self,
-            id="CodedeployGroup",
-            blue_green_deployment_config=codedeploy.EcsBlueGreenDeploymentConfig(
-                blue_target_group=self.blue_target_group,
-                green_target_group=self.green_target_group,
-                listener=self.listener,
-            ),
-            service=self.service,
-            application=self.deploy_app,
+            discovery_name="app",
         )
 
 
