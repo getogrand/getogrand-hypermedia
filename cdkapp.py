@@ -1,6 +1,7 @@
 from aws_cdk import (
     App,
     Stack,
+    Environment,
     aws_ec2 as ec2,
     aws_ecr as ecr,
     aws_ecs as ecs,
@@ -11,7 +12,119 @@ from aws_cdk import (
     aws_codedeploy as codedeploy,
 )
 from constructs import Construct
-from typing import Sequence, Mapping
+from typing import Sequence, Mapping, Callable
+from jsii import JSIIAbstractClass
+
+
+class BlueGreenDeployment(Construct, metaclass=JSIIAbstractClass): ...
+
+
+class SimpleNlbBlueGreenDeployment(BlueGreenDeployment):
+    def __init__(
+        self,
+        scope: Construct,
+        id: str,
+        port: int,
+        vpc: ec2.IVpc,
+        service: ecs.FargateService,
+    ):
+        super().__init__(scope=scope, id=id)
+        self.vpc = vpc
+        self.service = service
+        self.load_balancer = elb.NetworkLoadBalancer(
+            scope=self,
+            id="Elb",
+            vpc=self.vpc,
+            internet_facing=False,
+        )
+        self.blue_target_group = elb.NetworkTargetGroup(
+            scope=self,
+            id="BlueTargetGroup",
+            target_type=elb.TargetType.IP,
+            port=port,
+            protocol=elb.Protocol.TCP,
+            vpc=self.vpc,
+        )
+        self.green_target_group = elb.NetworkTargetGroup(
+            scope=self,
+            id="GreenTargetGroup",
+            target_type=elb.TargetType.IP,
+            port=port,
+            protocol=elb.Protocol.TCP,
+            vpc=self.vpc,
+        )
+        self.listener = self.load_balancer.add_listener(
+            id="Listener",
+            port=port,
+            default_target_groups=[self.blue_target_group],
+        )
+        self.service.attach_to_network_target_group(self.blue_target_group)
+        self.deploy_app = codedeploy.EcsApplication(scope=self, id="CodedeployApp")
+        self.deploy_group = codedeploy.EcsDeploymentGroup(
+            scope=self,
+            id="CodedeployGroup",
+            blue_green_deployment_config=codedeploy.EcsBlueGreenDeploymentConfig(
+                blue_target_group=self.blue_target_group,
+                green_target_group=self.green_target_group,
+                listener=self.listener,
+            ),
+            service=self.service,
+            application=self.deploy_app,
+        )
+
+
+class ProxyServiceBlueGreenDeployment(BlueGreenDeployment):
+    def __init__(
+        self,
+        scope: Construct,
+        id: str,
+        vpc: ec2.IVpc,
+        service: ecs.FargateService,
+    ) -> None:
+        super().__init__(scope, id)
+        self.vpc = vpc
+        self.service = service
+        self.load_balancer = elb.ApplicationLoadBalancer(
+            scope=self, id="Elb", vpc=self.vpc, internet_facing=True
+        )
+
+        self.blue_target_group = elb.ApplicationTargetGroup(
+            scope=self,
+            id="HttpBlueTargetGroup",
+            target_type=elb.TargetType.IP,
+            port=8000,
+            protocol=elb.ApplicationProtocol.HTTP,
+            vpc=self.vpc,
+        )
+        self.green_target_group = elb.ApplicationTargetGroup(
+            scope=self,
+            id="HttpGreenTargetGroup",
+            target_type=elb.TargetType.IP,
+            port=8000,
+            protocol=elb.ApplicationProtocol.HTTP,
+            vpc=self.vpc,
+        )
+        self.listener = self.load_balancer.add_listener(
+            id="Http",
+            default_target_groups=[self.blue_target_group],
+            open=True,
+            port=80,
+            protocol=elb.ApplicationProtocol.HTTP,
+        )
+        self.service.attach_to_application_target_group(self.blue_target_group)
+
+        self.deploy_app = codedeploy.EcsApplication(scope=self, id="CodedeployApp")
+        self.deploy_group = codedeploy.EcsDeploymentGroup(
+            scope=self,
+            id="Http",
+            blue_green_deployment_config=codedeploy.EcsBlueGreenDeploymentConfig(
+                blue_target_group=self.blue_target_group,
+                green_target_group=self.green_target_group,
+                listener=self.listener,
+            ),
+            service=self.service,
+            application=self.deploy_app,
+        )
 
 
 class Service(Construct):
@@ -34,6 +147,10 @@ class Service(Construct):
         command: Sequence[str] | None = None,
         mount_points: Sequence[ecs.MountPoint] | None = None,
         discovery_name: str | None = None,
+        blue_green_deployment: Callable[
+            [ec2.IVpc, ecs.FargateService], BlueGreenDeployment
+        ]
+        | None = None,
     ):
         super().__init__(scope, id)
         self.cluster = cluster
@@ -107,46 +224,16 @@ class Service(Construct):
         if file_system:
             file_system.connections.allow_from(self.service.connections, ec2.Port.NFS)
 
-        self.load_balancer = elb.NetworkLoadBalancer(
-            scope=self,
-            id="Elb",
-            vpc=self.vpc,
-            internet_facing=False,
-        )
-        self.blue_target_group = elb.NetworkTargetGroup(
-            scope=self,
-            id="BlueTargetGroup",
-            target_type=elb.TargetType.IP,
-            port=exposing_port,
-            protocol=elb.Protocol.TCP,
-            vpc=self.vpc,
-        )
-        self.green_target_group = elb.NetworkTargetGroup(
-            scope=self,
-            id="GreenTargetGroup",
-            target_type=elb.TargetType.IP,
-            port=exposing_port,
-            protocol=elb.Protocol.TCP,
-            vpc=self.vpc,
-        )
-        self.listener = self.load_balancer.add_listener(
-            id="Listener",
-            port=exposing_port,
-            default_target_groups=[self.blue_target_group],
-        )
-        self.service.attach_to_network_target_group(self.blue_target_group)
-        self.deploy_app = codedeploy.EcsApplication(scope=self, id="CodedeployApp")
-        self.deploy_group = codedeploy.EcsDeploymentGroup(
-            scope=self,
-            id="CodedeployGroup",
-            blue_green_deployment_config=codedeploy.EcsBlueGreenDeploymentConfig(
-                blue_target_group=self.blue_target_group,
-                green_target_group=self.green_target_group,
-                listener=self.listener,
-            ),
-            service=self.service,
-            application=self.deploy_app,
-        )
+        if blue_green_deployment:
+            self.blue_green_deployment = blue_green_deployment(self.vpc, self.service)
+        else:
+            self.blue_green_deployment = SimpleNlbBlueGreenDeployment(
+                scope=self,
+                id="BlueGreenDeployment",
+                port=exposing_port,
+                vpc=self.vpc,
+                service=self.service,
+            )
 
 
 class DbService(Service):
@@ -218,13 +305,13 @@ class AppService(Service):
             task_exec_role=task_exec_role,
             task_role=task_role,
             img_repo_suffix="getogrand-hypermedia/app",
-            exposing_port=8443,
+            exposing_port=8000,
             container_health_check=ecs.HealthCheck(
-                command=["CMD-SHELL", "wget --quiet --spider https://localhost:8443"]
+                command=["CMD-SHELL", "wget --quiet --spider http://localhost:8000"]
             ),
             container_port_mappings=[
                 ecs.PortMapping(
-                    container_port=8443, host_port=8443, protocol=ecs.Protocol.TCP
+                    container_port=8000, host_port=8000, protocol=ecs.Protocol.TCP
                 )
             ],
             secrets={
@@ -239,11 +326,72 @@ class AppService(Service):
             working_directory="/app",
             command=[
                 "daphne",
-                "-e",
-                "ssl:8443:interface=0.0.0.0:privateKey=/app/localhost+2-key.pem:certKey=/app/localhost+2.pem",
+                "-b",
+                "0.0.0.0",
+                "-p",
+                "8000",
                 "getogrand_hypermedia.asgi:application",
             ],
             discovery_name="app",
+        )
+
+
+class ProxyService(Service):
+    def __init__(
+        self,
+        scope: Construct,
+        id: str,
+        cluster: ecs.ICluster,
+        task_exec_role: iam.Role,
+        task_role: iam.Role,
+        file_system: efs.FileSystem,
+    ):
+        super().__init__(
+            scope=scope,
+            id=id,
+            cluster=cluster,
+            task_exec_role=task_exec_role,
+            task_role=task_role,
+            img_repo_suffix="getogrand-hypermedia/proxy",
+            exposing_port=443,
+            container_health_check=ecs.HealthCheck(
+                command=["CMD-SHELL", "wget --quiet --spider http://localhost:8000"]
+            ),
+            file_system=file_system,
+            task_volumes=[
+                ecs.Volume(
+                    name="proxy-data",
+                    efs_volume_configuration=ecs.EfsVolumeConfiguration(
+                        file_system_id=file_system.file_system_id
+                    ),
+                ),
+                ecs.Volume(
+                    name="proxy-config",
+                    efs_volume_configuration=ecs.EfsVolumeConfiguration(
+                        file_system_id=file_system.file_system_id
+                    ),
+                ),
+            ],
+            container_port_mappings=[
+                ecs.PortMapping(
+                    container_port=8000, host_port=8000, protocol=ecs.Protocol.TCP
+                ),
+            ],
+            mount_points=[
+                ecs.MountPoint(
+                    container_path="/data",
+                    read_only=False,
+                    source_volume="proxy-data",
+                ),
+                ecs.MountPoint(
+                    container_path="/config",
+                    read_only=False,
+                    source_volume="proxy-config",
+                ),
+            ],
+            blue_green_deployment=lambda vpc, service: ProxyServiceBlueGreenDeployment(
+                scope=self, id="BlueGreenDeployment", vpc=vpc, service=service
+            ),
         )
 
 
@@ -407,8 +555,16 @@ class HypermediaStack(Stack):
             task_role=task_role,
             secret=secret,
         )
+        self.proxy_service = ProxyService(
+            scope=self,
+            id="ProxyService",
+            cluster=cluster,
+            task_exec_role=task_exec_role,
+            task_role=task_role,
+            file_system=file_system,
+        )
 
 
 app = App()
-HypermediaStack(app, "GetograndHypermedia")
+HypermediaStack(app, "GetograndHypermedia", env=Environment(region="ap-northeast-2"))
 app.synth()

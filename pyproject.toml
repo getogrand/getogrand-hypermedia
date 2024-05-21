@@ -18,10 +18,10 @@ virtual = true
 dev-dependencies = ["aws-cdk-lib>=2.140.0"]
 
 [tool.rye.scripts]
-dev = "docker compose -f compose.base.yaml -f compose.local.yaml up"
-prod = "docker compose -f compose.base.yaml -f compose.prod.yaml up"
-manage = "docker compose -f compose.base.yaml -f compose.local.yaml run app python manage.py"
-shell = "docker compose -f compose.base.yaml -f compose.local.yaml run app python manage.py shell"
+dev = "docker compose -f compose.base.yaml -f compose.local.yaml up --build"
+prod = "docker compose -f compose.base.yaml -f compose.prod.yaml up --build"
+manage = "docker compose -f compose.base.yaml -f compose.local.yaml run --build app python manage.py"
+shell = "docker compose -f compose.base.yaml -f compose.local.yaml run --build app python manage.py shell"
 build = "docker compose -f compose.base.yaml -f compose.prod.yaml build"
 push = "docker compose -f compose.base.yaml -f compose.prod.yaml push"
 ecr-login = "/bin/zsh -c \"aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 730335367003.dkr.ecr.ap-northeast-2.amazonaws.com\""

@@ -9,3 +9,5 @@ RUN <<EOF
 EOF
 
 COPY ./Caddyfile /etc/caddy/Caddyfile
+
+EXPOSE 8000 8443

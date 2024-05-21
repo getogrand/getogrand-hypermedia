@@ -4,10 +4,10 @@ services:
     build:
       platforms:
         - "linux/x86_64"
-    command: daphne -e ssl:8443:interface=0.0.0.0:privateKey=/app/localhost+2-key.pem:certKey=/app/localhost+2.pem getogrand_hypermedia.asgi:application
+    command: daphne -b 0.0.0.0 -p 8000 getogrand_hypermedia.asgi:application
     restart: unless-stopped
     ports:
-      - 8443:8443
+      - 8000:8000
   proxy:
     image: 730335367003.dkr.ecr.ap-northeast-2.amazonaws.com/getogrand-hypermedia/proxy
     build:

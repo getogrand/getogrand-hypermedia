@@ -14,22 +14,13 @@ COPY ./requirements.lock ./
 RUN --mount=type=cache,target=/root/.cache/pip <<EOF
   set -eux;
 
-  # Add `testing` Package Repository
-  echo "https://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories;
-  apk update;
-
   # Install System Dependencies
   apk add --no-cache --virtual .build-deps gcc libc-dev libffi-dev;
-  apk add --no-cache --virtual .mkcert-deps nss-tools mkcert;
-
-  # Install Local CA
-  mkcert -install;
-  mkcert localhost 127.0.0.1 ::1;
 
   # Install Python Dependencies
   PYTHONDONTWRITEBYTECODE=1 pip install --no-cache-dir -r requirements.lock;
 
-  apk del --no-network .build-deps .mkcert-deps;
+  apk del --no-network .build-deps;
 EOF
 
 COPY . .

@@ -1,7 +1,8 @@
 # Global Options
 {
-	auto_https off
+	auto_https disable_redirects
 	http_port 8000
+	https_port 8443
 	log {
 		format json {
 			time_format iso8601
@@ -11,6 +12,6 @@
 }
 
 # Site Blocks
-:8000 {
-	reverse_proxy app:8000
+localhost:8000, localhost:8443, :8000, :8443 {
+	reverse_proxy {$UPSTREAMS:app.getogrand-hypermedia:8000}
 }
