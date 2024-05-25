@@ -10,13 +10,20 @@ from aws_cdk import (
     aws_efs as efs,
     aws_elasticloadbalancingv2 as elb,
     aws_codedeploy as codedeploy,
+    aws_codepipeline as pipeline,
+    aws_codepipeline_actions as pipeline_actions,
+    aws_codebuild as codebuild,
 )
 from constructs import Construct
 from typing import Sequence, Mapping, Callable
 from jsii import JSIIAbstractClass
+from abc import abstractmethod
 
 
-class BlueGreenDeployment(Construct, metaclass=JSIIAbstractClass): ...
+class BlueGreenDeployment(Construct, metaclass=JSIIAbstractClass):
+    @property
+    @abstractmethod
+    def deploy_group(self) -> codedeploy.EcsDeploymentGroup: ...
 
 
 class SimpleNlbBlueGreenDeployment(BlueGreenDeployment):
@@ -60,7 +67,7 @@ class SimpleNlbBlueGreenDeployment(BlueGreenDeployment):
         )
         self.service.attach_to_network_target_group(self.blue_target_group)
         self.deploy_app = codedeploy.EcsApplication(scope=self, id="CodedeployApp")
-        self.deploy_group = codedeploy.EcsDeploymentGroup(
+        self._deploy_group = codedeploy.EcsDeploymentGroup(
             scope=self,
             id="CodedeployGroup",
             blue_green_deployment_config=codedeploy.EcsBlueGreenDeploymentConfig(
@@ -71,6 +78,10 @@ class SimpleNlbBlueGreenDeployment(BlueGreenDeployment):
             service=self.service,
             application=self.deploy_app,
         )
+
+    @property
+    def deploy_group(self) -> codedeploy.EcsDeploymentGroup:
+        return self._deploy_group
 
 
 class ProxyServiceBlueGreenDeployment(BlueGreenDeployment):
@@ -94,6 +105,7 @@ class ProxyServiceBlueGreenDeployment(BlueGreenDeployment):
             target_type=elb.TargetType.IP,
             port=8000,
             protocol=elb.ApplicationProtocol.HTTP,
+            health_check=elb.HealthCheck(path="/health"),
             vpc=self.vpc,
         )
         self.green_target_group = elb.ApplicationTargetGroup(
@@ -102,6 +114,7 @@ class ProxyServiceBlueGreenDeployment(BlueGreenDeployment):
             target_type=elb.TargetType.IP,
             port=8000,
             protocol=elb.ApplicationProtocol.HTTP,
+            health_check=elb.HealthCheck(path="/health"),
             vpc=self.vpc,
         )
         self.listener = self.load_balancer.add_listener(
@@ -114,7 +127,7 @@ class ProxyServiceBlueGreenDeployment(BlueGreenDeployment):
         self.service.attach_to_application_target_group(self.blue_target_group)
 
         self.deploy_app = codedeploy.EcsApplication(scope=self, id="CodedeployApp")
-        self.deploy_group = codedeploy.EcsDeploymentGroup(
+        self._deploy_group = codedeploy.EcsDeploymentGroup(
             scope=self,
             id="Http",
             blue_green_deployment_config=codedeploy.EcsBlueGreenDeploymentConfig(
@@ -125,6 +138,10 @@ class ProxyServiceBlueGreenDeployment(BlueGreenDeployment):
             service=self.service,
             application=self.deploy_app,
         )
+
+    @property
+    def deploy_group(self) -> codedeploy.EcsDeploymentGroup:
+        return self._deploy_group
 
 
 class Service(Construct):
@@ -235,6 +252,120 @@ class Service(Construct):
                 service=self.service,
             )
 
+        gen_code_deploy_json_proj = codebuild.Project(
+            scope=self,
+            id="CodeBuildProject",
+            build_spec=codebuild.BuildSpec.from_object(
+                {
+                    "version": "0.2",
+                    "phases": {
+                        "build": {
+                            "commands": [
+                                r"""
+aws ecs describe-task-definition \
+--task-definition $TASK_DEFINITION_ARN \
+| jq '.["taskDefinition"] | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .placementConstraints, .compatibilities, .registeredAt, .registeredBy)' \
+> taskdef.json""",
+                                r"""
+aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME \
+| jq '.services[0] | { version: 0.0, Resources: [ { TargetService: { Type: "AWS::ECS::Service", Properties: { TaskDefinition: .taskDefinition, LoadBalancerInfo: { ContainerName: .loadBalancers[0].containerName, ContainerPort: .loadBalancers[0].containerPort } } } } ] }' \
+> appspec.json""",
+                            ]
+                        },
+                    },
+                    "artifacts": {"files": ["taskdef.json", "appspec.json"]},
+                }
+            ),
+            environment_variables={
+                "CLUSTER_NAME": codebuild.BuildEnvironmentVariable(
+                    value=self.cluster.cluster_name
+                ),
+                "SERVICE_NAME": codebuild.BuildEnvironmentVariable(
+                    value=self.service.service_name
+                ),
+                "TASK_DEFINITION_ARN": codebuild.BuildEnvironmentVariable(
+                    value=self.task_def.task_definition_arn
+                ),
+            },
+        )
+        assert gen_code_deploy_json_proj.role is not None
+        gen_code_deploy_json_proj.role.add_to_principal_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["ecs:DescribeTaskDefinition"],
+                resources=["*"],
+            )
+        )
+        gen_code_deploy_json_proj.role.add_to_principal_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["ecs:DescribeServices"],
+                resources=[self.service.service_arn],
+            )
+        )
+
+        ecr_change_output = pipeline.Artifact()
+        gen_code_deploy_jsons_output = pipeline.Artifact()
+        deploy_role = iam.Role(
+            scope=self,
+            id="DeployRole",
+            assumed_by=iam.ServicePrincipal("codepipeline.amazonaws.com"),  # type: ignore
+        )
+        assert deploy_role.assume_role_policy is not None
+        deploy_role.assume_role_policy.add_statements(
+            iam.PolicyStatement(
+                actions=["sts:AssumeRole"],
+                principals=[iam.ServicePrincipal("codebuild.amazonaws.com")],  # type: ignore
+            )
+        )
+        self.build_pipe = pipeline.Pipeline(
+            scope=self,
+            id="Deploy",
+            role=deploy_role,
+            pipeline_type=pipeline.PipelineType.V2,
+            stages=[
+                pipeline.StageProps(
+                    stage_name="Source",
+                    actions=[
+                        pipeline_actions.EcrSourceAction(
+                            action_name="EcrChangeDetected",
+                            output=ecr_change_output,
+                            repository=self.img_repo,
+                            role=deploy_role,  # type: ignore
+                        )
+                    ],
+                ),
+                pipeline.StageProps(
+                    stage_name="Build",
+                    actions=[
+                        pipeline_actions.CodeBuildAction(
+                            action_name="GenerateCodeDeployJsons",
+                            input=ecr_change_output,
+                            project=gen_code_deploy_json_proj,  # type: ignore
+                            outputs=[gen_code_deploy_jsons_output],
+                            role=deploy_role,  # type: ignore
+                        ),
+                    ],
+                ),
+                pipeline.StageProps(
+                    stage_name="Deploy",
+                    actions=[
+                        pipeline_actions.CodeDeployEcsDeployAction(
+                            action_name="Deploy",
+                            deployment_group=self.blue_green_deployment.deploy_group,
+                            task_definition_template_file=gen_code_deploy_jsons_output.at_path(
+                                "taskdef.json"
+                            ),
+                            app_spec_template_file=gen_code_deploy_jsons_output.at_path(
+                                "appspec.json"
+                            ),
+                            role=deploy_role,  # type: ignore
+                        )
+                    ],
+                ),
+            ],
+        )
+
 
 class DbService(Service):
     def __init__(
@@ -307,7 +438,10 @@ class AppService(Service):
             img_repo_suffix="getogrand-hypermedia/app",
             exposing_port=8000,
             container_health_check=ecs.HealthCheck(
-                command=["CMD-SHELL", "wget --quiet --spider http://localhost:8000"]
+                command=[
+                    "CMD-SHELL",
+                    "wget --quiet --spider http://localhost:8000/health",
+                ]
             ),
             container_port_mappings=[
                 ecs.PortMapping(
@@ -322,15 +456,12 @@ class AppService(Service):
                     secret=secret, field="db-password"
                 ),
             },
-            environment={"DEBUG": "False", "DB_HOST": "db"},
+            environment={"DEBUG": "False", "DB_HOST": "db.getogrand-hypermedia"},
             working_directory="/app",
             command=[
-                "daphne",
-                "-b",
-                "0.0.0.0",
-                "-p",
-                "8000",
-                "getogrand_hypermedia.asgi:application",
+                "sh",
+                "-c",
+                "python manage.py migrate && daphne -b 0.0.0.0 -p 8000 getogrand_hypermedia.asgi:application",
             ],
             discovery_name="app",
         )
@@ -355,7 +486,10 @@ class ProxyService(Service):
             img_repo_suffix="getogrand-hypermedia/proxy",
             exposing_port=443,
             container_health_check=ecs.HealthCheck(
-                command=["CMD-SHELL", "wget --quiet --spider http://localhost:8000"]
+                command=[
+                    "CMD-SHELL",
+                    "wget --quiet --spider http://localhost:8000/health",
+                ]
             ),
             file_system=file_system,
             task_volumes=[
@@ -566,5 +700,9 @@ class HypermediaStack(Stack):
 
 
 app = App()
-HypermediaStack(app, "GetograndHypermedia", env=Environment(region="ap-northeast-2"))
+HypermediaStack(
+    app,
+    "GetograndHypermedia",
+    env=Environment(account="730335367003", region="ap-northeast-2"),
+)
 app.synth()
