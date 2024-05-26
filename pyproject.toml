@@ -15,9 +15,7 @@ requires-python = ">= 3.8"
 [tool.rye]
 managed = true
 virtual = true
-dev-dependencies = [
-    "aws-cdk-lib>=2.140.0",
-]
+dev-dependencies = ["aws-cdk-lib>=2.140.0"]
 
 [tool.rye.scripts]
 dev = "docker compose -f compose.base.yaml -f compose.local.yaml up --build"

@@ -81,11 +81,11 @@ ASGI_APPLICATION = "getogrand_hypermedia.asgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "postgres",
-        "USER": "postgres",
+        "NAME": os.getenv("DB_DATABASE", "postgres"),
+        "USER": os.getenv("DB_USERNAME", "postgres"),
         "PASSWORD": os.environ["DB_PASSWORD"],
         "HOST": os.environ["DB_HOST"],
-        "PORT": "5432",
+        "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
 
