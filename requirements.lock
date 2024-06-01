@@ -6,10 +6,12 @@
 #   features: []
 #   all-features: false
 #   with-sources: false
+#   generate-hashes: false
 
 asgiref==3.8.1
     # via daphne
     # via django
+    # via django-browser-reload
 attrs==23.2.0
     # via automat
     # via service-identity
@@ -28,6 +30,11 @@ cryptography==42.0.5
     # via service-identity
 daphne==4.1.2
 django==5.0.4
+    # via django-browser-reload
+    # via django-tailwind
+django-browser-reload==1.12.1
+    # via django-tailwind
+django-tailwind==3.8.0
 h2==4.1.0
     # via twisted
 hpack==4.0.0

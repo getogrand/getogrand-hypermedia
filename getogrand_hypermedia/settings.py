@@ -27,11 +27,12 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 DEBUG: bool = eval(os.environ.get("DEBUG", "False"))
 
 ALLOWED_HOSTS = [".localhost", "127.0.0.1", ".getogrand.com", "app"]
-
+INTERNAL_IPS = ["127.0.0.1"]
 
 # Application definition
 
 INSTALLED_APPS = [
+    # Third Party
     "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -39,6 +40,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "tailwind",
+    "django_browser_reload",
+    # Our Apps
+    "theme",
     "main",
 ]
 
@@ -51,6 +56,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
 ROOT_URLCONF = "getogrand_hypermedia.urls"
@@ -130,3 +136,6 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# django-tailwind
+TAILWIND_APP_NAME = "theme"

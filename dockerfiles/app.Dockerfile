@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM python:3.12-alpine
+FROM python:3.12-alpine as base
 EXPOSE 8000 8443
 WORKDIR /app
 
@@ -24,3 +24,18 @@ RUN --mount=type=cache,target=/root/.cache/pip <<EOF
 EOF
 
 COPY . .
+
+# local target
+FROM base as local
+RUN <<EOF
+  set -eux;
+  apk add nodejs npm;
+  npm install -g concurrently;
+EOF
+
+# prod target
+FROM base as prod
+RUN <<EOF
+  set -eux;
+  python manage.py tailwind build;
+EOF

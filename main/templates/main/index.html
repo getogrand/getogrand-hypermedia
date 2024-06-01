@@ -1,17 +1,10 @@
-<!doctype html>
-<html lang="ko-KR">
-  <head>
-    <meta charset="utf-8">
-    <meta name="author" content="Wonyoung Ju">
-    <meta name="description" content="getogrand's hypermedia collection.">
-    <title>getogrand's hypermedia</title>
-  </head>
-  <body>
-    <header>
-      <h1>getogrand's hypermedia collection</h1>
-    </header>
-    <main>
-      <p>Hello World!</p>
-    </main>
-  </body>
-</html>
+{% extends "base.html" %}
+
+{% block title_prefix %}main{% endblock title_prefix %}
+
+{% block container_content %}
+<section class="flex flex-col items-center justify-center h-screen">
+  <h1 class="text-5xl">Hello World!</h1>
+  <h2 class="text-4xl">안녕 세계!</h2>
+</section>
+{% endblock container_content %}

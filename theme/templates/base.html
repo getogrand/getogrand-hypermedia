@@ -1,0 +1,19 @@
+{% load static tailwind_tags %}
+<!doctype html>
+<html lang="ko-KR">
+	<head>
+    <title>{% block title_prefix %}{% endblock title_prefix %} :: getogrand's hypermedia</title>
+		<meta name="author" content="Wonyoung Ju">
+    <meta name="description" content="getogrand's hypermedia collection.">
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		{% tailwind_css %}
+	</head>
+
+	<body class="bg-gray-50 font-serif leading-normal tracking-normal">
+		<div class="container mx-auto">
+			{% block container_content %}{% endblock container_content %}
+		</div>
+	</body>
+</html>
