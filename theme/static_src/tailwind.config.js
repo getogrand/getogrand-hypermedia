@@ -5,6 +5,8 @@
  * https://unpkg.com/browse/tailwindcss@latest/stubs/defaultConfig.stub.js
  */
 
+const defaultTheme = require("tailwindcss/defaultTheme")
+
 module.exports = {
     content: [
         /**
@@ -42,7 +44,12 @@ module.exports = {
         // '../../**/*.py'
     ],
     theme: {
-        extend: {},
+        extend: {
+            fontFamily: {
+                'sans': ['S-CoreDream-3Light', ...defaultTheme.fontFamily.sans],
+                'serif': ['GowunBatang-Regular', ...defaultTheme.fontFamily.serif]
+            }
+        },
     },
     plugins: [
         /**
