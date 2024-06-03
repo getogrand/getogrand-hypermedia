@@ -11,11 +11,11 @@
 		{% tailwind_css %}
 	</head>
 
-	<body class="bg-gray-50 font-sans leading-normal tracking-normal">
+	<body class="bg-gray-50 leading-normal tracking-normal font-sans break-keep break-words whitespace-normal text-pretty">
+		<header class="mx-4 mb-2 px-1 pt-4 pb-1 border-b-2 border-gray-800 uppercase text-xl">
+			<a href="/" class="align-middle">getogrand's hypermedia</a>
+		</header>
 		<div class="container mx-auto">
-			<header class="p-2 border-b border-gray-800 flex">
-				<a href="/">getogrand's hypermedia</a>
-			</header>
 			{% block container_content %}{% endblock container_content %}
 		</div>
 	</body>
