@@ -47,6 +47,7 @@ module.exports = {
         extend: {
             fontFamily: {
                 'sans': ['S-CoreDream-5Medium', ...defaultTheme.fontFamily.sans],
+                'sans-light': ['S-CoreDream-3Light', ...defaultTheme.fontFamily.sans],
                 'serif': ['GowunBatang-Regular', ...defaultTheme.fontFamily.serif]
             }
         },
