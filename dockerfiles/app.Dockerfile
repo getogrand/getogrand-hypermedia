@@ -23,8 +23,6 @@ RUN --mount=type=cache,target=/root/.cache/pip <<EOF
   apk del --no-network .build-deps;
 EOF
 
-COPY . .
-
 # local target
 FROM base as local
 RUN <<EOF
@@ -32,6 +30,7 @@ RUN <<EOF
   apk add nodejs npm;
   npm install -g concurrently;
 EOF
+COPY . .
 
 # prod target
 FROM base as prod
@@ -39,3 +38,4 @@ RUN <<EOF
   set -eux;
   python manage.py tailwind build;
 EOF
+COPY . .

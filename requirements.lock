@@ -31,9 +31,11 @@ cryptography==42.0.5
 daphne==4.1.2
 django==5.0.4
     # via django-browser-reload
+    # via django-model-utils
     # via django-tailwind
 django-browser-reload==1.12.1
     # via django-tailwind
+django-model-utils==4.5.1
 django-tailwind==3.8.0
 h2==4.1.0
     # via twisted
