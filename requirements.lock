@@ -35,6 +35,7 @@ django==5.0.4
     # via django-tailwind
 django-browser-reload==1.12.1
     # via django-tailwind
+django-light==0.1.0.post3
 django-model-utils==4.5.1
 django-tailwind==3.8.0
 h2==4.1.0

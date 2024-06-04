@@ -26,7 +26,7 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG: bool = eval(os.environ.get("DEBUG", "False"))
 
-ALLOWED_HOSTS = [".localhost", "127.0.0.1", ".getogrand.com", "app"]
+ALLOWED_HOSTS = [".localhost", "127.0.0.1", ".getogrand.media", "app"]
 INTERNAL_IPS = ["127.0.0.1"]
 
 # Application definition
@@ -34,6 +34,7 @@ INTERNAL_IPS = ["127.0.0.1"]
 INSTALLED_APPS = [
     # Third Party
     "daphne",
+    "django_light",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -49,6 +50,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "main.middlewares.HealthCheckMiddleware",
+    "main.middlewares.DisableAdminI18nMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -76,6 +78,8 @@ TEMPLATES = [
         },
     },
 ]
+
+CSRF_TRUSTED_ORIGINS = ["https://localhost"] if DEBUG else ["https://getogrand.media"]
 
 WSGI_APPLICATION = "getogrand_hypermedia.wsgi.application"
 ASGI_APPLICATION = "getogrand_hypermedia.asgi.application"

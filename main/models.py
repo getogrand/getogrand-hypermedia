@@ -1,5 +1,5 @@
 from django.db import models
-from model_utils.models import TimeStampedModel, TimeFramedModel
+from model_utils.models import TimeStampedModel
 
 
 class Profile(TimeStampedModel):
@@ -10,7 +10,15 @@ class Profile(TimeStampedModel):
         return f"{self.full_name} ({self.email})"
 
 
-class Experience(TimeStampedModel, TimeFramedModel):
+class DateFramedModel(models.Model):
+    start = models.DateField(null=True, blank=True)
+    end = models.DateField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class Experience(TimeStampedModel, DateFramedModel):
     profile = models.ForeignKey(to=Profile, on_delete=models.CASCADE)
     company_name = models.CharField()
     positions = models.JSONField(help_text="array of string")
@@ -19,7 +27,7 @@ class Experience(TimeStampedModel, TimeFramedModel):
         return self.company_name
 
 
-class Duty(TimeStampedModel, TimeFramedModel):
+class Duty(TimeStampedModel, DateFramedModel):
     experience = models.ForeignKey(to=Experience, on_delete=models.CASCADE)
     title = models.CharField()
 

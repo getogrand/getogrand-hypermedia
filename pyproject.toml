@@ -10,6 +10,7 @@ dependencies = [
     "twisted[tls,http2]>=24.3.0",
     "django-tailwind[reload]>=3.8.0",
     "django-model-utils>=4.5.1",
+    "django-light>=0.1.0.post3",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
