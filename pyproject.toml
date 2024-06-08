@@ -11,6 +11,9 @@ dependencies = [
     "django-tailwind[reload]>=3.8.0",
     "django-model-utils>=4.5.1",
     "django-light>=0.1.0.post3",
+    "django-template-partials>=24.2",
+    "django-stubs>=5.0.2",
+    "django-stubs-ext>=5.0.2",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"

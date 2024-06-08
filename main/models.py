@@ -4,7 +4,7 @@ from model_utils.models import TimeStampedModel
 
 class Profile(TimeStampedModel):
     full_name = models.CharField()
-    email = models.EmailField()
+    email = models.EmailField(unique=True)
 
     def __str__(self) -> str:
         return f"{self.full_name} ({self.email})"
@@ -20,8 +20,11 @@ class DateFramedModel(models.Model):
 
 class Experience(TimeStampedModel, DateFramedModel):
     profile = models.ForeignKey(to=Profile, on_delete=models.CASCADE)
+    story = models.TextField()
     company_name = models.CharField()
-    positions = models.JSONField(help_text="array of string")
+    positions: models.JSONField[list[str]] = models.JSONField(
+        help_text="array of string"
+    )
 
     def __str__(self) -> str:
         return self.company_name

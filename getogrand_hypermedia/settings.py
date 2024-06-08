@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import django_stubs_ext
+
+django_stubs_ext.monkeypatch()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -34,6 +37,7 @@ INTERNAL_IPS = ["127.0.0.1"]
 INSTALLED_APPS = [
     # Third Party
     "daphne",
+    "template_partials",
     "django_light",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -80,6 +84,18 @@ TEMPLATES = [
 ]
 
 CSRF_TRUSTED_ORIGINS = ["https://localhost"] if DEBUG else ["https://getogrand.media"]
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console.debug": {"level": "DEBUG", "class": "logging.StreamHandler"}},
+    "loggers": {
+        "django.db.backends": {
+            "level": "DEBUG",
+            "handlers": ["console.debug"],
+        },
+    },
+}
 
 WSGI_APPLICATION = "getogrand_hypermedia.wsgi.application"
 ASGI_APPLICATION = "getogrand_hypermedia.asgi.application"

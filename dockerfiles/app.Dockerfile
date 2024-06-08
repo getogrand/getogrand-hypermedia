@@ -10,7 +10,7 @@ RUN <<EOF
   apk add --no-cache tzdata;
 EOF
 
-COPY ./requirements.lock ./
+COPY ./requirements.lock ./requirements.lock
 RUN --mount=type=cache,target=/root/.cache/pip <<EOF
   set -eux;
 

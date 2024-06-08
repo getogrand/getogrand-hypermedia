@@ -12,6 +12,7 @@ asgiref==3.8.1
     # via daphne
     # via django
     # via django-browser-reload
+    # via django-stubs
 attrs==23.2.0
     # via automat
     # via service-identity
@@ -32,12 +33,19 @@ daphne==4.1.2
 django==5.0.4
     # via django-browser-reload
     # via django-model-utils
+    # via django-stubs
+    # via django-stubs-ext
     # via django-tailwind
+    # via django-template-partials
 django-browser-reload==1.12.1
     # via django-tailwind
 django-light==0.1.0.post3
 django-model-utils==4.5.1
+django-stubs==5.0.2
+django-stubs-ext==5.0.2
+    # via django-stubs
 django-tailwind==3.8.0
+django-template-partials==24.2
 h2==4.1.0
     # via twisted
 hpack==4.0.0
@@ -79,7 +87,11 @@ twisted==24.3.0
     # via daphne
 txaio==23.1.1
     # via autobahn
+types-pyyaml==6.0.12.20240311
+    # via django-stubs
 typing-extensions==4.11.0
+    # via django-stubs
+    # via django-stubs-ext
     # via psycopg
     # via twisted
 zope-interface==6.3
