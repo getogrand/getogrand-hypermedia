@@ -14,6 +14,8 @@ from pathlib import Path
 import os
 import django_stubs_ext
 
+from .utils import read_secret_file
+
 django_stubs_ext.monkeypatch()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ["SECRET_KEY"]
+SECRET_KEY = read_secret_file(os.environ["SECRET_KEY_FILE"])
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG: bool = eval(os.environ.get("DEBUG", "False"))
@@ -113,7 +115,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("DB_DATABASE", "postgres"),
         "USER": os.getenv("DB_USERNAME", "postgres"),
-        "PASSWORD": os.environ["DB_PASSWORD"],
+        "PASSWORD": read_secret_file(os.environ["DB_PASSWORD_FILE"]),
         "HOST": os.environ["DB_HOST"],
         "PORT": os.getenv("DB_PORT", "5432"),
     }

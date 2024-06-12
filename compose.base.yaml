@@ -7,9 +7,9 @@ services:
       dockerfile: dockerfiles/app.Dockerfile
     working_dir: /app
     environment:
-      SECRET_KEY: /run/secrets/django-secret-key
+      SECRET_KEY_FILE: /run/secrets/django-secret-key
       DEBUG: ${DEBUG}
-      DB_PASSWORD: /run/secrets/db-password
+      DB_PASSWORD_FILE: /run/secrets/db-password
       DB_HOST: ${DB_HOST}
     secrets:
       - django-secret-key
@@ -39,7 +39,7 @@ services:
     volumes:
       - db-volume:/var/lib/postgresql/data
     environment:
-      POSTGRES_PASSWORD: /run/secrets/db-password
+      POSTGRES_PASSWORD_FILE: /run/secrets/db-password
     secrets:
       - db-password
     restart: unless-stopped
