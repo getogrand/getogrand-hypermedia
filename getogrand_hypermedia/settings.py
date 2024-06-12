@@ -30,7 +30,11 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 DEBUG: bool = eval(os.environ.get("DEBUG", "False"))
 
 ALLOWED_HOSTS = [".localhost", "127.0.0.1", ".getogrand.media", "app"]
-INTERNAL_IPS = ["127.0.0.1"]
+
+if DEBUG:
+    INTERNAL_IPS = ["127.0.0.1"] + [
+        f"192.168.{a}.{b}" for a in range(1, 256) for b in range(1, 256)
+    ]
 
 # Application definition
 

@@ -6,9 +6,11 @@
 {% block title_prefix %}main{% endblock title_prefix %}
 
 {% partialdef experience %}
+{% with select_id=form.expanded_experience_ids.auto_id %}
 <article id="experience-{{ experience.id }}" class="flex flex-col">
   <p id="experience-{{ experience.id }}-story" class="indent-2">{{ experience.story }}</p>
-  <article class="not-prose font-sans mt-8">
+  {% if experience.id in form.cleaned_data.expanded_experience_ids %}
+  <article class="flex flex-col not-prose font-sans mt-8">
     <section class="flex justify-between items-baseline">
       <h3 id="experience-{{ experience.id }}-company_name" class="text-xl">{{ experience.company_name }}</h3>
       <div id="experience-{{ experience.id }}-duration" class="text-sm text-gray-400 font-sans-light">
@@ -18,7 +20,7 @@
     <ul id="experience-{{ experience.id }}-positions" class="text-sm leading-relaxed font-sans-light mt-1">
       {% for position in experience.positions %}<li><span>{{ position }}</span></li>{% endfor %}
     </ul>
-    <ul id="experience-{{ experience.id }}-duties" class="mt-4 flex flex-col gap-7">
+    <ul id="experience-{{ experience.id }}-duties" class="mt-4 mb-5 flex flex-col gap-7">
       {% for duty in experience.duty_set.all %}
       <li>
         <article>
@@ -48,19 +50,33 @@
       </li>
       {% endfor %}
     </ul>
+    <button type="submit" class="prose font-serif before:content-['↼_'] mb-6 self-end"
+            _="on click remove @selected from <option[value='{{ experience.id }}']/> in #{{ select_id }}">
+      관련 경력 사항 가리기
+    </button>
+    <img class="w-24 self-center mt-14 mb-8" src="{% static "main/noun-plant-2215382.svg" %}" />
   </article>
-  <img class="w-24 self-center" src="{% static "main/noun-plant-2215382.svg" %}" />
+  {% else %}
+  <button type="submit" class="before:content-['⇀_'] mb-6 self-start"
+          _="on click add @selected to <option[value='{{ experience.id }}']/> in #{{ select_id }}">
+    관련 경력 사항 보기
+  </button>
+  {% endif %}
 </article>
+{% endwith %}
 {% endpartialdef %}
 
 {% block container_content %}
-<article class="p-4 prose font-serif">
-  <p class="indent-2">안녕하세요. 주원영입니다. 2013년부터 소프트웨어 개발자로 일하며 살고 있습니다. 연락은 <a href="mailto:getogrand@hey.com">getogrand@hey.com</a>으로 부탁드립니다. 단순 수다, 업계 이야기, 기술에 대한 문의/논의 및 이를 위한 커피챗 요청 환영합니다.</p>
+<form action="" method="get">
+  <article class="p-4 prose font-serif">
+    <p class="indent-2">안녕하세요. 주원영입니다. 2013년부터 소프트웨어 개발자로 일하며 살고 있습니다. 연락은 <a href="mailto:getogrand@hey.com">getogrand@hey.com</a>으로 부탁드립니다. 단순 수다, 업계 이야기, 기술에 대한 문의/논의 및 이를 위한 커피챗 요청 환영합니다.</p>
 
-  <h2>커리어</h2>
+    <h2>커리어</h2>
 
-  {% for experience in profile.experience_set.all %}{% partial experience %}{% endfor %}
+    {% for experience in profile.experience_set.all %}{% partial experience %}{% endfor %}
 
-  <p class="indent-2">다음 커리어는 다시 Full-Stack 웹 개발자 혹은 백엔드 개발자로 생각하고 있습니다. HTML-over-the-wire 류의 기술과 Full-Stack 프레임워크를 함께 써서 제가 생각한 합리적인 기술 스택을 직접 검증해 보고 싶습니다. 기술적 검증에 성공하고 비즈니스도 잘 되어 과연 이 스택으로 어디까지 스케일업이 가능한지 확인할 수 있다면 더할 나위 없이 좋겠습니다.</p>
-</article>
+    <p class="indent-2">다음 커리어는 다시 Full-Stack 웹 개발자 혹은 백엔드 개발자로 생각하고 있습니다. HTML-over-the-wire 류의 기술과 Full-Stack 프레임워크를 함께 써서 제가 생각한 합리적인 기술 스택을 직접 검증해 보고 싶습니다. 기술적 검증에 성공하고 비즈니스도 잘 되어 과연 이 스택으로 어디까지 스케일업이 가능한지 확인할 수 있다면 더할 나위 없이 좋겠습니다.</p>
+  </article>
+  {{ form.expanded_experience_ids }}
+</form>
 {% endblock container_content %}
