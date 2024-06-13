@@ -28,11 +28,19 @@
 				font-weight: normal;
 			}
 		</style>
+
 		{% tailwind_css %}
+
 		{% if debug %}
 		<script src="{% static "js/_hyperscript.0.9.12.js" %}"></script>
 		{% else %}
 		<script src="{% static "js/_hyperscript.0.9.12.min.js.gz" %}"></script>
+		{% endif %}
+
+		{% if debug %}
+		<script src="{% static "js/htmx.1.9.12.js" %}"></script>
+		{% else %}
+		<script src="{% static "js/htmx.1.9.12.min.js.gz" %}"></script>
 		{% endif %}
 	</head>
 
