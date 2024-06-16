@@ -10,7 +10,7 @@
 <article id="experience-{{ experience.id }}" class="flex flex-col">
   <p id="experience-{{ experience.id }}-story" class="indent-2">{{ experience.story }}</p>
   {% if experience.id in form.cleaned_data.expanded_experience_ids %}
-  <article class="flex flex-col not-prose font-sans mt-8">
+  <article id="experience-{{ experience.id }}-details" class="flex flex-col not-prose font-sans mt-8">
     <section class="flex justify-between items-baseline">
       <h3 id="experience-{{ experience.id }}-company_name" class="text-xl">{{ experience.company_name }}</h3>
       <div id="experience-{{ experience.id }}-duration" class="text-sm text-gray-400 font-sans-light">
@@ -50,15 +50,13 @@
       </li>
       {% endfor %}
     </ul>
-    <button type="submit" class="prose font-serif before:content-['↼_'] mb-6 self-end"
-            _="on click remove @selected from <option[value='{{ experience.id }}']/> in #{{ select_id }}">
+    <button id="experience-{{ experience.id }}-collapse" type="submit" class="prose font-serif before:content-['↼_'] mb-6 self-end" hx-get="/" hx-target="#experience-{{ experience.id }}-details" hx-swap="outerHTML" hx-select="#experience-{{ experience.id }}-expand" hx-select-oob="#{{ form.expanded_experience_ids.auto_id }}" hx-vals="js:{expanded_experience_ids: getExpandedExperienceIds().filter(id => id !== '{{ experience.id }}')}">
       관련 경력 사항 가리기
     </button>
     <img class="w-24 self-center mt-14 mb-8" src="{% static "main/noun-plant-2215382.svg" %}" />
   </article>
   {% else %}
-  <button type="submit" class="before:content-['⇀_'] mb-6 self-start"
-          _="on click add @selected to <option[value='{{ experience.id }}']/> in #{{ select_id }}">
+  <button id="experience-{{ experience.id }}-expand" type="submit" class="before:content-['⇀_'] mb-6 self-start" hx-get="/" hx-select="#experience-{{ experience.id }}-details" hx-swap="outerHTML" hx-select-oob="#{{ form.expanded_experience_ids.auto_id }}" hx-vals="js:{expanded_experience_ids: getExpandedExperienceIds().concat(['{{ experience.id }}'])}">
     관련 경력 사항 보기
   </button>
   {% endif %}
@@ -67,7 +65,7 @@
 {% endpartialdef %}
 
 {% block container_content %}
-<form action="/" method="get" hx-get="/" hx-select="form" hx-target="this" hx-replace-url="true" hx-swap="outerHTML transition:true">
+<form action="/" method="get" hx-replace-url="true">
   <article class="p-4 prose font-serif">
     <p class="indent-2">안녕하세요. 주원영입니다. 2013년부터 소프트웨어 개발자로 일하며 살고 있습니다. 연락은 <a href="mailto:getogrand@hey.com">getogrand@hey.com</a>으로 부탁드립니다. 단순 수다, 업계 이야기, 기술에 대한 문의/논의 및 이를 위한 커피챗 요청 환영합니다.</p>
 
@@ -79,4 +77,15 @@
   </article>
   {{ form.expanded_experience_ids }}
 </form>
+
+<script>
+/**
+ * @returns {string[]}
+ */
+function getExpandedExperienceIds() {
+  return Array.from(
+    document.getElementById('{{ form.expanded_experience_ids.auto_id }}').selectedOptions
+  ).map(opt => opt.value)
+}
+</script>
 {% endblock container_content %}

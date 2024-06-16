@@ -9,6 +9,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		<meta name="htmx-config" content='{"scrollBehavior":"auto", "triggerSpecsCache": {}}'>
 		<style>
 			@font-face {
 				font-family: 'GowunBatang-Regular';
@@ -39,12 +40,13 @@
 
 		{% if debug %}
 		<script src="{% static "js/htmx.1.9.12.js" %}"></script>
+		<script>htmx.logAll();</script>
 		{% else %}
 		<script src="{% static "js/htmx.1.9.12.min.js.gz" %}"></script>
 		{% endif %}
 	</head>
 
-	<body class="bg-gray-50 leading-relaxed tracking-normal font-sans break-keep break-words whitespace-normal text-pretty">
+	<body class="bg-gray-50 leading-relaxed tracking-normal font-sans break-keep break-words whitespace-normal text-pretty" hx-boost="true">
 		<header class="mx-4 mb-2 px-1 pt-4 pb-1 border-b-2 border-gray-800 uppercase text-xl">
 			<a href="/" class="align-middle">getogrand's hypermedia</a>
 		</header>
