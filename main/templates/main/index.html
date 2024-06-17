@@ -10,53 +10,65 @@
 <article id="experience-{{ experience.id }}" class="flex flex-col">
   <p id="experience-{{ experience.id }}-story" class="indent-2">{{ experience.story }}</p>
   {% if experience.id in form.cleaned_data.expanded_experience_ids %}
-  <article id="experience-{{ experience.id }}-details" class="flex flex-col not-prose font-sans mt-8">
-    <section class="flex justify-between items-baseline">
-      <h3 id="experience-{{ experience.id }}-company_name" class="text-xl">{{ experience.company_name }}</h3>
-      <div id="experience-{{ experience.id }}-duration" class="text-sm text-gray-400 font-sans-light">
-        <time datetime="{{ experience.start|date:"Y-m" }}">{{ experience.start|date:"Y.m" }}</time> ~ <time datetime="{{ experience.end|date:"Y-m" }}">{{ experience.end|date:"Y.m" }}</time>
-      </div>
-    </section>
-    <ul id="experience-{{ experience.id }}-positions" class="text-sm leading-relaxed font-sans-light mt-1">
-      {% for position in experience.positions %}<li><span>{{ position }}</span></li>{% endfor %}
-    </ul>
-    <ul id="experience-{{ experience.id }}-duties" class="mt-4 mb-5 flex flex-col gap-7">
-      {% for duty in experience.duty_set.all %}
-      <li>
-        <article>
-          <section class="flex flex-wrap justify-between items-baseline mb-2">
-            <h4>{{ duty.title }}</h4>
-            {% if duty.start %}
-            <div class="text-sm text-gray-400 font-sans-light text-right grow">
-              <time datetime="{{ duty.start|date:"Y-m" }}">{{ duty.start|date:"Y.m" }}</time> ~ <time datetime="{{ duty.end|date:"Y-m" }}">{{ duty.end|date:"Y.m" }}</time>
-            </div>
-            {% endif %}
-          </section>
-          <ul class="font-sans-light text-sm leading-relaxed flex flex-col gap-4">
-            {% for duty_item in duty.dutyitem_set.all %}
-            <li>
-              {{ duty_item.title }}
-              {% if duty_item.dutysubitem_set.all %}
-              <ul class="ml-2 list-disc list-inside flex flex-col gap-1 mt-2">
-                {% for subitem in duty_item.dutysubitem_set.all %}
-                <li><span class="-ml-2">{{ subitem.title }}</span></li>
-                {% endfor %}
-              </ul>
+  <article id="experience-{{ experience.id }}-details" class="grid not-prose font-sans mt-8">
+    <div class="flex flex-col overflow-hidden">
+      <section class="flex justify-between items-baseline">
+        <h3 id="experience-{{ experience.id }}-company_name" class="text-xl">{{ experience.company_name }}</h3>
+        <div id="experience-{{ experience.id }}-duration" class="text-sm text-gray-400 font-sans-light">
+          <time datetime="{{ experience.start|date:"Y-m" }}">{{ experience.start|date:"Y.m" }}</time> ~ <time datetime="{{ experience.end|date:"Y-m" }}">{{ experience.end|date:"Y.m" }}</time>
+        </div>
+      </section>
+      <ul id="experience-{{ experience.id }}-positions" class="text-sm leading-relaxed font-sans-light mt-1">
+        {% for position in experience.positions %}<li><span>{{ position }}</span></li>{% endfor %}
+      </ul>
+      <ul id="experience-{{ experience.id }}-duties" class="mt-4 mb-5 flex flex-col gap-7">
+        {% for duty in experience.duty_set.all %}
+        <li>
+          <article>
+            <section class="flex flex-wrap justify-between items-baseline mb-2">
+              <h4>{{ duty.title }}</h4>
+              {% if duty.start %}
+              <div class="text-sm text-gray-400 font-sans-light text-right grow">
+                <time datetime="{{ duty.start|date:"Y-m" }}">{{ duty.start|date:"Y.m" }}</time> ~ <time datetime="{{ duty.end|date:"Y-m" }}">{{ duty.end|date:"Y.m" }}</time>
+              </div>
               {% endif %}
-            </li>
-            {% endfor %}
-          </ul>
-        </article>
-      </li>
-      {% endfor %}
-    </ul>
-    <button id="experience-{{ experience.id }}-collapse" type="submit" class="prose font-serif before:content-['↼_'] mb-6 self-end" hx-get="/" hx-target="#experience-{{ experience.id }}-details" hx-swap="outerHTML" hx-select="#experience-{{ experience.id }}-expand" hx-select-oob="#{{ form.expanded_experience_ids.auto_id }}" hx-vals="js:{expanded_experience_ids: getExpandedExperienceIds().filter(id => id !== '{{ experience.id }}')}">
-      관련 경력 사항 가리기
-    </button>
-    <img class="w-24 self-center mt-14 mb-8" src="{% static "main/noun-plant-2215382.svg" %}" />
+            </section>
+            <ul class="font-sans-light text-sm leading-relaxed flex flex-col gap-4">
+              {% for duty_item in duty.dutyitem_set.all %}
+              <li>
+                {{ duty_item.title }}
+                {% if duty_item.dutysubitem_set.all %}
+                <ul class="ml-2 list-disc list-inside flex flex-col gap-1 mt-2">
+                  {% for subitem in duty_item.dutysubitem_set.all %}
+                  <li><span class="-ml-2">{{ subitem.title }}</span></li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+          </article>
+        </li>
+        {% endfor %}
+      </ul>
+      <button
+        id="experience-{{ experience.id }}-collapse" type="submit"
+        class="prose font-serif before:content-['↼_'] mb-6 self-end"
+        hx-get="/" hx-target="#experience-{{ experience.id }}-details"
+        hx-swap="outerHTML swap:0.6s" hx-select="#experience-{{ experience.id }}-expand" hx-select-oob="#{{ form.expanded_experience_ids.auto_id }}"
+        hx-vals="js:{expanded_experience_ids: getExpandedExperienceIds().filter(id => id !== '{{ experience.id }}')}"
+        _="on click js document.getElementById('experience-{{ experience.id }}').scrollIntoView({behavior: 'smooth'}) end">
+        관련 경력 사항 가리기
+      </button>
+      <img class="w-24 self-center mt-14 mb-8" src="{% static "main/noun-plant-2215382.svg" %}" />
+    </div>
   </article>
   {% else %}
-  <button id="experience-{{ experience.id }}-expand" type="submit" class="before:content-['⇀_'] mb-6 self-start" hx-get="/" hx-select="#experience-{{ experience.id }}-details" hx-swap="outerHTML" hx-select-oob="#{{ form.expanded_experience_ids.auto_id }}" hx-vals="js:{expanded_experience_ids: getExpandedExperienceIds().concat(['{{ experience.id }}'])}">
+  <button
+    id="experience-{{ experience.id }}-expand" type="submit"
+    class="before:content-['⇀_'] mb-6 self-start"
+    hx-get="/" hx-select="#experience-{{ experience.id }}-details" hx-swap="outerHTML swap:0.3s" hx-select-oob="#{{ form.expanded_experience_ids.auto_id }}"
+    hx-vals="js:{expanded_experience_ids: getExpandedExperienceIds().concat(['{{ experience.id }}'])}">
     관련 경력 사항 보기
   </button>
   {% endif %}
@@ -78,6 +90,29 @@
   {{ form.expanded_experience_ids }}
 </form>
 
+<style>
+article[id^=experience-][id$=-details] {
+  opacity: 1;
+  grid-template-rows: 1fr;
+  transition: opacity 0.3s ease-out 0.3s, grid-template-rows 0.3s ease-out 0.3s;
+}
+article[id^=experience-][id$=-details].htmx-swapping,
+article[id^=experience-][id$=-details].htmx-added {
+  overflow: hidden;
+  min-height: 0;
+  opacity: 0;
+  grid-template-rows: 0fr;
+}
+
+button[id^=experience-][type=submit] {
+  opacity: 1;
+  transition: opacity 0.3s ease-out;
+}
+button[id^=experience-][type=submit].htmx-swapping,
+button[id^=experience-][type=submit].htmx-added {
+  opacity: 0;
+}
+</style>
 <script>
 /**
  * @returns {string[]}
