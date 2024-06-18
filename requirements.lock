@@ -21,6 +21,8 @@ autobahn==23.6.2
     # via daphne
 automat==22.10.0
     # via twisted
+brotli==1.1.0
+    # via whitenoise
 cffi==1.16.0
     # via cryptography
 constantly==23.10.4
@@ -94,5 +96,6 @@ typing-extensions==4.11.0
     # via django-stubs-ext
     # via psycopg
     # via twisted
+whitenoise==6.6.0
 zope-interface==6.3
     # via twisted

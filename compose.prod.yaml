@@ -5,7 +5,7 @@ services:
       target: prod
       platforms:
         - "linux/x86_64"
-    command: sh -c "python manage.py migrate && daphne -b 0.0.0.0 -p 8000 getogrand_hypermedia.asgi:application"
+    command: sh -c "python manage.py collectstatic --no-input && python manage.py migrate && daphne -b 0.0.0.0 -p 8000 getogrand_hypermedia.asgi:application"
     restart: unless-stopped
     ports:
       - 80:8000

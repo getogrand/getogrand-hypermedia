@@ -34,6 +34,8 @@ aws-cdk-asset-node-proxy-agent-v6==2.0.3
 aws-cdk-lib==2.140.0
 binaryornot==0.4.4
     # via cookiecutter
+brotli==1.1.0
+    # via whitenoise
 cattrs==23.2.3
     # via jsii
 certifi==2024.2.2
@@ -172,5 +174,6 @@ typing-extensions==4.11.0
     # via twisted
 urllib3==2.2.1
     # via requests
+whitenoise==6.6.0
 zope-interface==6.3
     # via twisted
