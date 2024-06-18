@@ -35,6 +35,7 @@ aws-cdk-lib==2.140.0
 binaryornot==0.4.4
     # via cookiecutter
 brotli==1.1.0
+    # via django-compression-middleware
     # via whitenoise
 cattrs==23.2.3
     # via jsii
@@ -60,6 +61,7 @@ cryptography==42.0.5
 daphne==4.1.2
 django==5.0.4
     # via django-browser-reload
+    # via django-compression-middleware
     # via django-model-utils
     # via django-stubs
     # via django-stubs-ext
@@ -67,6 +69,7 @@ django==5.0.4
     # via django-template-partials
 django-browser-reload==1.12.1
     # via django-tailwind
+django-compression-middleware==0.5.0
 django-light==0.1.0.post3
 django-model-utils==4.5.1
 django-stubs==5.0.2
@@ -177,3 +180,5 @@ urllib3==2.2.1
 whitenoise==6.6.0
 zope-interface==6.3
     # via twisted
+zstandard==0.22.0
+    # via django-compression-middleware

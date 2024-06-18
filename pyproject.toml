@@ -15,6 +15,7 @@ dependencies = [
     "django-stubs>=5.0.2",
     "django-stubs-ext>=5.0.2",
     "whitenoise[brotli]>=6.6.0",
+    "django-compression-middleware>=0.5.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
