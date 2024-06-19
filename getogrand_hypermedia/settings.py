@@ -14,8 +14,9 @@ from pathlib import Path
 import os
 import django_stubs_ext
 
-from .utils import read_secret_file
+from .utils import read_secret_file, monkeypatch_for_template_debug
 
+monkeypatch_for_template_debug()
 django_stubs_ext.monkeypatch()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -30,6 +31,7 @@ SECRET_KEY = read_secret_file(os.environ["SECRET_KEY_FILE"])
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG: bool = eval(os.environ.get("DEBUG", "False"))
+TEMPLATE_DEBUG = DEBUG
 
 ALLOWED_HOSTS = [".localhost", "127.0.0.1", ".getogrand.media", "app"]
 
@@ -52,6 +54,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "tailwind",
+    "template_debug",
     "django_browser_reload",
     # Our Apps
     "theme",

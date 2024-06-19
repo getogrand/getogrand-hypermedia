@@ -76,7 +76,9 @@ django-stubs==5.0.2
 django-stubs-ext==5.0.2
     # via django-stubs
 django-tailwind==3.8.0
+django-template-debug==0.3.5
 django-template-partials==24.2
+django-utils-six==2.0
 h2==4.1.0
     # via twisted
 hpack==4.0.0

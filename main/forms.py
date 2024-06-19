@@ -6,7 +6,7 @@ from .models import Profile
 class ProfileForm(forms.Form):
     expanded_experience_ids = forms.TypedMultipleChoiceField(
         coerce=int,
-        widget=forms.SelectMultiple(attrs={"class": "hidden"}),
+        widget=forms.SelectMultiple(attrs={"class": "hidden", "hx-swap-oob": "true"}),
         required=False,
     )
 

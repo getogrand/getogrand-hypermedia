@@ -39,20 +39,21 @@
 		{% tailwind_css %}
 
 		{% if debug %}
-		<script src="{% static "js/_hyperscript.0.9.12.js" %}"></script>
+		<script defer src="{% static "js/_hyperscript.0.9.12.js" %}"></script>
 		{% else %}
-		<script src="{% static "js/_hyperscript.0.9.12.min.js.gz" %}"></script>
+		<script defer src="{% static "js/_hyperscript.0.9.12.min.js.gz" %}"></script>
 		{% endif %}
 
 		{% if debug %}
-		<script src="{% static "js/htmx.2.0.0.js" %}"></script>
-		<script>htmx.logAll();</script>
+		<script defer src="{% static "js/htmx.2.0.0.js" %}"></script>
 		{% else %}
-		<script src="{% static "js/htmx.2.0.0.min.js" %}"></script>
+		<script defer src="{% static "js/htmx.2.0.0.min.js" %}"></script>
 		{% endif %}
 	</head>
 
-	<body class="bg-gray-50 leading-relaxed tracking-normal font-sans break-keep break-words whitespace-normal text-pretty" hx-boost="true">
+	<body class="bg-gray-50 leading-relaxed tracking-normal font-sans break-keep break-words whitespace-normal text-pretty" hx-boost="true"
+		{% if debug %}_="on load js htmx.logAll()"{% endif %}
+	>
 		<header class="mx-4 mb-2 px-1 pt-4 pb-1 border-b-2 border-gray-800 uppercase text-xl">
 			<a href="/" class="align-middle">getogrand's hypermedia</a>
 		</header>
