@@ -1,8 +1,13 @@
 import asyncio
 import re
+import json
+import requests
+from urllib.parse import urlparse, ParseResult
+from django.core.exceptions import BadRequest
 from django.http import HttpRequest, HttpResponse
 from django.template import loader
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 from asgiref.sync import sync_to_async
 
 from .forms import ProfileForm
@@ -48,3 +53,22 @@ async def index(request: HttpRequest) -> HttpResponse:
         return HttpResponse("\n".join(render_results))
     else:
         raise Exception(f"unknown target: {hx_target}")
+
+
+@csrf_exempt
+async def sentry_tunnel(request: HttpRequest) -> HttpResponse:
+    envelope = request.body
+    piece = envelope.splitlines()[0]
+    header = json.loads(piece)
+    dsn: ParseResult = urlparse(header["dsn"])
+    project_id: str = dsn.path.replace("/", "")
+
+    sentry_hostname = "o303432.ingest.us.sentry.io"
+    if dsn.hostname != sentry_hostname:
+        raise BadRequest(f"invalid dsn hostname: {dsn.hostname}")
+    if project_id != "4507459219685376":
+        raise BadRequest(f"invalid project id: {project_id}")
+
+    upstream_sentry_url = f"https://{sentry_hostname}/api/{project_id}/envelope/"
+    await sync_to_async(requests.post)(upstream_sentry_url, envelope)
+    return HttpResponse("")

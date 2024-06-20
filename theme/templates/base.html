@@ -38,6 +38,10 @@
 
 		{% tailwind_css %}
 
+		{% if not debug %}
+		<script defer src="{% static "js/sentry.browser.8.10.0.min.js" %}" crossorigin="anonymous"></script>
+		{% endif %}
+
 		{% if debug %}
 		<script defer src="{% static "js/_hyperscript.0.9.12.js" %}"></script>
 		{% else %}
@@ -61,4 +65,15 @@
 			{% block container_content %}{% endblock container_content %}
 		</div>
 	</body>
+
+	{% if not debug %}
+	<script type="text/hyperscript">
+		on load js {
+			Sentry.init({
+				dsn: "https://014368f40281b9972cbb18d0d5222803@o303432.ingest.us.sentry.io/4507459219685376",
+				tunnel: "/sentry_tunnel"
+			});
+		}
+	</script>
+	{% endif %}
 </html>

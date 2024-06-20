@@ -24,8 +24,13 @@ automat==22.10.0
 brotli==1.1.0
     # via django-compression-middleware
     # via whitenoise
+certifi==2024.6.2
+    # via requests
+    # via sentry-sdk
 cffi==1.16.0
     # via cryptography
+charset-normalizer==3.3.2
+    # via requests
 constantly==23.10.4
     # via twisted
 cryptography==42.0.5
@@ -41,6 +46,7 @@ django==5.0.4
     # via django-stubs-ext
     # via django-tailwind
     # via django-template-partials
+    # via sentry-sdk
 django-browser-reload==1.12.1
     # via django-tailwind
 django-compression-middleware==0.5.0
@@ -64,6 +70,7 @@ hyperlink==21.0.0
     # via twisted
 idna==3.7
     # via hyperlink
+    # via requests
     # via twisted
 incremental==22.10.0
     # via twisted
@@ -81,6 +88,8 @@ pycparser==2.22
     # via cffi
 pyopenssl==24.1.0
     # via twisted
+requests==2.32.3
+sentry-sdk==2.6.0
 service-identity==24.1.0
     # via twisted
 setuptools==69.5.1
@@ -101,6 +110,9 @@ typing-extensions==4.11.0
     # via django-stubs-ext
     # via psycopg
     # via twisted
+urllib3==2.2.2
+    # via requests
+    # via sentry-sdk
 whitenoise==6.6.0
 zope-interface==6.3
     # via twisted

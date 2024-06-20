@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 import django_stubs_ext
+import sentry_sdk
 
 from .utils import read_secret_file, monkeypatch_for_template_debug
 
@@ -39,6 +40,13 @@ if DEBUG:
     INTERNAL_IPS = ["127.0.0.1"] + [
         f"192.168.{a}.{b}" for a in range(1, 256) for b in range(1, 256)
     ]
+
+if not DEBUG:
+    sentry_sdk.init(
+        dsn="https://0a1b9010ce08d2a62d63777fca3302cd@o303432.ingest.us.sentry.io/4507459219685376",
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+    )
 
 # Application definition
 
