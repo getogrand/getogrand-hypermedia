@@ -36,7 +36,14 @@
 			}
 		</style>
 
-		{% tailwind_css %}
+		{% if debug %}
+			{% now "U" as timestamp %}
+			{% tailwind_preload_css v=timestamp %}
+			{% tailwind_css v=timestamp %}
+		{% else %}
+			{% tailwind_preload_css %}
+			{% tailwind_css %}
+		{% endif %}
 
 		{% if not debug %}
 		<script defer src="{% static "js/sentry.browser.8.10.0.min.js" %}" crossorigin="anonymous"></script>
