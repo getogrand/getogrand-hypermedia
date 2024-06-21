@@ -6,6 +6,7 @@
  */
 
 const defaultTheme = require("tailwindcss/defaultTheme")
+const plugin = require("tailwindcss/plugin")
 
 module.exports = {
     content: [
@@ -61,5 +62,9 @@ module.exports = {
         require('@tailwindcss/forms'),
         require('@tailwindcss/typography'),
         require('@tailwindcss/aspect-ratio'),
+        plugin(function ({ addVariant }) {
+            addVariant('target', '&:target')
+            addVariant('group-target', ':merge(.group):target &')
+        }),
     ],
 }

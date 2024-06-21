@@ -85,10 +85,21 @@
 
 {% block container_content %}
 <form action="/" method="get" hx-replace-url="true">
-  <article class="p-4 prose font-serif">
+  <article class="p-4 mt-8 mb-24 prose font-serif">
     <p class="indent-2">안녕하세요. 주원영입니다. 2013년부터 소프트웨어 개발자로 일하며 살고 있습니다. 연락은 <a href="mailto:getogrand@hey.com">getogrand@hey.com</a>으로 부탁드립니다. 단순 수다, 업계 이야기, 기술에 대한 문의/논의 및 이를 위한 커피챗 요청 환영합니다.</p>
 
-    <h2>커리어</h2>
+    <h2 id="accounts" class="group"><a href="#accounts" class="no-underline hover:underline decoration-gray-500 relative"><span class="hidden sm:group-hover:inline-block sm:group-target:inline-block sm:absolute sm:-start-5 sm:text-gray-500">#</span>출몰지</a></h2>
+
+    <ul>
+      <li><a class="no-underline flex flex-wrap items-baseline gap-x-1" href="https://x.com/getogrand" target="_blank"><span class="underline">Twitter(𝕏)</span><span class="text-xs text-gray-400">https://x.com/getogrand</span></a></li>
+      <li><a class="no-underline flex flex-wrap items-baseline gap-x-1" href="https://github.com/getogrand" target="_blank"><span class="underline">GitHub</span><span class="text-xs text-gray-400">https://github.com/getogrand</span></a></li>
+      <li><a class="no-underline flex flex-wrap items-baseline gap-x-1" href="https://www.instagram.com/getogrand_" target="_blank"><span class="underline">Instagram</span><span class="text-xs text-gray-400">https://www.instagram.com/getogrand_</span></a></li>
+      <li><a class="no-underline flex flex-wrap items-baseline gap-x-1" href="https://www.linkedin.com/in/wonyoung-ju" target="_blank"><span class="underline">LinkedIn</span><span class="text-xs text-gray-400">https://www.linkedin.com/in/wonyoung-ju</span></a></li>
+      <li><a class="no-underline flex flex-wrap items-baseline gap-x-1" href="https://stackoverflow.com/users/12509847/getogrand" target="_blank"><span class="underline">StackOverflow</span><span class="text-xs text-gray-400">https://stackoverflow.com/users/12509847/getogrand</span></a></li>
+      <li><a class="no-underline flex flex-wrap items-baseline gap-x-1" href="https://xn--o39a90m89r.com/@getogrand" target="_blank"><span class="underline">적독가(積讀家)</span><span class="text-xs text-gray-400">https://xn--o39a90m89r.com/@getogrand</span></a></li>
+    </ul>
+
+    <h2 id="career" class="group"><a href="#career" class="group no-underline hover:underline decoration-gray-500 relative"><span class="hidden sm:group-hover:inline-block sm:group-target:inline-block sm:absolute sm:-start-5 sm:text-gray-500">#</span>커리어</a></h2>
 
     {% with select_id=form.expanded_experience_ids.auto_id %}
     {% for experience in profile.experience_set.all %}
