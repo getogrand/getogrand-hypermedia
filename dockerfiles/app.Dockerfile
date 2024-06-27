@@ -21,7 +21,7 @@ RUN --mount=type=cache,target=/root/.cache/pip --mount=type=cache,target=/var/ca
   set -eux;
 
   # Install System Dependencies
-  apk add --virtual .build-deps gcc libc-dev libffi-dev git;
+  apk add --virtual .build-deps build-base libc-dev libffi-dev git;
 
   # Install Python Dependencies
   pip install -r requirements.lock;

@@ -12,7 +12,10 @@ from aws_cdk import (
     aws_ecr as ecr,
     aws_certificatemanager as acm,
     aws_route53 as route53,
+    aws_route53_targets as targets,
     aws_elasticloadbalancingv2 as elbv2,
+    aws_cloudfront as cloudfront,
+    aws_cloudfront_origins as cforigins,
 )
 from constructs import Construct
 
@@ -114,6 +117,7 @@ class AppService(Construct):
         self,
         scope: Construct,
         id: str,
+        public_hosted_zone: route53.IPublicHostedZone,
         cluster: ecs.ICluster,
         task_exec_role: iam.IRole,
         task_role: iam.IRole,
@@ -161,14 +165,6 @@ class AppService(Construct):
                 "python manage.py collectstatic --no-input && python manage.py migrate && daphne -b 0.0.0.0 -p 8000 getogrand_hypermedia.asgi:application",
             ],
         )
-        self.www_hosted_zone = (
-            route53.PublicHostedZone.from_public_hosted_zone_attributes(
-                scope=self,
-                id="WwwHostedZone",
-                hosted_zone_id="Z0483017157BN09B2LXOP",
-                zone_name="getogrand.media",
-            )
-        )
         self.service = patterns.ApplicationLoadBalancedFargateService(
             scope=self,
             id="Service",
@@ -182,18 +178,17 @@ class AppService(Construct):
             capacity_provider_strategies=[
                 ecs.CapacityProviderStrategy(capacity_provider="FARGATE_SPOT", weight=1)
             ],
-            certificate=acm.Certificate(
+            certificate=acm.Certificate.from_certificate_arn(
                 scope=self,
                 id="Certificate",
-                domain_name="getogrand.media",
-                key_algorithm=acm.KeyAlgorithm("EC_secp384r1"),
-                validation=acm.CertificateValidation.from_dns(self.www_hosted_zone),
+                certificate_arn="arn:aws:acm:ap-northeast-2:730335367003:certificate/12a5b4a1-a168-4604-99be-32c37f29f62b",
             ),
+            cloud_map_options=ecs.CloudMapOptions(name="app"),
             circuit_breaker=ecs.DeploymentCircuitBreaker(enable=True, rollback=True),
             cluster=cluster,
             desired_count=1,
-            domain_name="getogrand.media",
-            domain_zone=self.www_hosted_zone,
+            domain_name="app.getogrand.media",
+            domain_zone=public_hosted_zone,
             enable_ecs_managed_tags=True,
             health_check_grace_period=Duration.seconds(5),
             idle_timeout=Duration.seconds(30),
@@ -212,6 +207,14 @@ class AppService(Construct):
 class HypermediaStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs):
         super().__init__(scope, id, **kwargs)
+        self.public_hosted_zone = (
+            route53.PublicHostedZone.from_public_hosted_zone_attributes(
+                scope=self,
+                id="PublicHostedZone",
+                hosted_zone_id="Z04398023FK9IFQP6B2HQ",
+                zone_name="getogrand.media",
+            )
+        )
         self.vpc = ec2.Vpc(
             scope=self,
             id="Vpc",
@@ -335,11 +338,70 @@ class HypermediaStack(Stack):
             scope=self,
             id="AppService",
             cluster=self.cluster,
+            public_hosted_zone=self.public_hosted_zone,
             task_exec_role=self.task_exec_role,  # type: ignore
             task_role=self.task_role,  # type: ignore
             secret=self.secret,
         )
         self.app_service.node.add_dependency(self.db_service)
+
+        self.cf_dist = cloudfront.Distribution(
+            scope=self,
+            id="CloudfrontDistribution",
+            default_behavior=cloudfront.BehaviorOptions(
+                origin=cforigins.HttpOrigin(
+                    domain_name="app.getogrand.media",
+                    protocol_policy=cloudfront.OriginProtocolPolicy.MATCH_VIEWER,
+                ),  # type: ignore
+                allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
+                cached_methods=cloudfront.CachedMethods.CACHE_GET_HEAD,
+                cache_policy=cloudfront.CachePolicy(
+                    scope=self,
+                    id="CachePolicy",
+                    cookie_behavior=cloudfront.CacheCookieBehavior.all(),
+                    default_ttl=Duration.seconds(0),
+                    enable_accept_encoding_brotli=True,
+                    enable_accept_encoding_gzip=True,
+                    header_behavior=cloudfront.CacheHeaderBehavior.allow_list(
+                        "x-method-override",
+                        "Origin",
+                        "HX-Trigger",
+                        "HX-Request",
+                        "Host",
+                        "HX-Prompt",
+                        "HX-Target",
+                        "HX-Boosted",
+                    ),
+                    query_string_behavior=cloudfront.CacheQueryStringBehavior.all(),
+                ),
+            ),
+            certificate=acm.Certificate.from_certificate_arn(
+                scope=self,
+                id="CloudfrontCertificate",
+                certificate_arn="arn:aws:acm:us-east-1:730335367003:certificate/6a86ec89-eff9-4682-81c4-9e14972ef7f5",
+            ),
+            domain_names=["getogrand.media"],
+            http_version=cloudfront.HttpVersion.HTTP2_AND_3,
+            enable_ipv6=True,
+            enable_logging=True,
+            log_includes_cookies=True,
+            publish_additional_metrics=True,
+        )
+        self.cf_alias_target = route53.RecordTarget.from_alias(
+            targets.CloudFrontTarget(self.cf_dist)  # type: ignore
+        )
+        self.cf_a_record = route53.ARecord(
+            scope=self,
+            id="CloudfrontARecord",
+            target=self.cf_alias_target,
+            zone=self.public_hosted_zone,
+        )
+        self.cf_aaaa_record = route53.AaaaRecord(
+            scope=self,
+            id="CloudfrontAaaaRecord",
+            target=self.cf_alias_target,
+            zone=self.public_hosted_zone,
+        )
 
 
 app = App()

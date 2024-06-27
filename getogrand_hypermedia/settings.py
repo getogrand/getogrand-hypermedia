@@ -14,9 +14,8 @@ from pathlib import Path
 import os
 import django_stubs_ext
 import sentry_sdk
-from socket import gethostname, gethostbyname
 
-from .utils import read_secret_file, monkeypatch_for_template_debug
+from .utils import get_self_ip, read_secret_file, monkeypatch_for_template_debug
 
 monkeypatch_for_template_debug()
 django_stubs_ext.monkeypatch()
@@ -39,9 +38,9 @@ SECRET_KEY = (
 DEBUG: bool = eval(os.environ.get("DEBUG", "False"))
 TEMPLATE_DEBUG = DEBUG
 
-ALLOWED_HOSTS = [".localhost", "127.0.0.1", ".getogrand.media", "app"] + [
-    gethostbyname(gethostname())
-]
+ALLOWED_HOSTS = [".localhost", "127.0.0.1", ".getogrand.media", "app"] + list(
+    get_self_ip()
+)
 
 if DEBUG:
     INTERNAL_IPS = ["127.0.0.1"] + [
