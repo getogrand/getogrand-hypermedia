@@ -31,7 +31,7 @@ dev-dependencies = ["aws-cdk-lib>=2.140.0", "cookiecutter>=2.6.0"]
 
 [tool.rye.scripts]
 dev = "docker compose -f compose.base.yaml -f compose.local.yaml up --build"
-prod = "docker compose -f compose.base.yaml -f compose.prod.yaml up --build"
+prod = { cmd = "docker compose -f compose.base.yaml -f compose.prod.yaml up --build", env = { UPSTREAMS = "app:8000", DEBUG = "False" } }
 manage = "docker compose -f compose.base.yaml -f compose.local.yaml run --build app python manage.py"
 shell = "docker compose -f compose.base.yaml -f compose.local.yaml run --build app python manage.py shell"
 build = "docker compose -f compose.base.yaml -f compose.prod.yaml build"

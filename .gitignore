@@ -20,3 +20,6 @@ cdk.out/
 
 # collected static files
 www/static/
+
+# editor configuration
+.vscode/

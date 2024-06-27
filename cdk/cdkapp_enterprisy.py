@@ -456,7 +456,7 @@ class AppService(Service):
                     secret=secret, field="db-password"
                 ),
             },
-            environment={"DEBUG": "False", "DB_HOST": "db.getogrand-hypermedia"},
+            environment={"DEBUG": "False", "DB_HOST": "db.getogrand.media"},
             working_directory="/app",
             command=[
                 "sh",
@@ -586,7 +586,7 @@ class HypermediaStack(Stack):
             id="EcsCluster",
             container_insights=True,
             default_cloud_map_namespace=ecs.CloudMapNamespaceOptions(
-                name="getogrand-hypermedia"
+                name="getogrand.media"
             ),
             enable_fargate_capacity_providers=True,
             execute_command_configuration=ecs.ExecuteCommandConfiguration(),

@@ -5,6 +5,9 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/app.Dockerfile
+      args:
+        SECRET_KEY_FILE: /run/secrets/django-secret-key
+        DEBUG: ${DEBUG}
     working_dir: /app
     environment:
       SECRET_KEY_FILE: /run/secrets/django-secret-key
@@ -29,6 +32,8 @@ services:
     volumes:
       - proxy-data:/data
       - proxy-config:/config
+    environment:
+      UPSTREAMS: ${UPSTREAMS}
     restart: unless-stopped
   db:
     build:

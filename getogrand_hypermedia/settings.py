@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 import django_stubs_ext
 import sentry_sdk
+from socket import gethostname, gethostbyname
 
 from .utils import read_secret_file, monkeypatch_for_template_debug
 
@@ -28,13 +29,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = read_secret_file(os.environ["SECRET_KEY_FILE"])
+SECRET_KEY = (
+    read_secret_file(os.environ["SECRET_KEY_FILE"])
+    if "SECRET_KEY_FILE" in os.environ
+    else os.environ["SECRET_KEY"]
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG: bool = eval(os.environ.get("DEBUG", "False"))
 TEMPLATE_DEBUG = DEBUG
 
-ALLOWED_HOSTS = [".localhost", "127.0.0.1", ".getogrand.media", "app"]
+ALLOWED_HOSTS = [".localhost", "127.0.0.1", ".getogrand.media", "app"] + [
+    gethostbyname(gethostname())
+]
 
 if DEBUG:
     INTERNAL_IPS = ["127.0.0.1"] + [
@@ -128,7 +135,9 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("DB_DATABASE", "postgres"),
         "USER": os.getenv("DB_USERNAME", "postgres"),
-        "PASSWORD": read_secret_file(os.environ["DB_PASSWORD_FILE"]),
+        "PASSWORD": read_secret_file(os.environ["DB_PASSWORD_FILE"])
+        if "DB_PASSWORD_FILE" in os.environ
+        else os.environ["DB_PASSWORD"],
         "HOST": os.environ["DB_HOST"],
         "PORT": os.getenv("DB_PORT", "5432"),
     }
