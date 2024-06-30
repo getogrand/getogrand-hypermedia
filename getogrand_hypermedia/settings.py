@@ -58,7 +58,7 @@ if not DEBUG:
 
 INSTALLED_APPS = [
     # Third Party
-    "daphne",
+    "whitenoise.runserver_nostatic",
     "template_partials",
     "django_light",
     "django.contrib.admin",

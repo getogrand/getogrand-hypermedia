@@ -6,8 +6,6 @@ authors = [{ name = "Wonyoung Ju", email = "getogrand@hey.com" }]
 dependencies = [
     "django>=5.0.4",
     "psycopg[binary]>=3.1.18",
-    "daphne>=4.1.2",
-    "twisted[tls,http2]>=24.3.0",
     "django-tailwind[reload]>=3.8.0",
     "django-model-utils>=4.5.1",
     "django-light>=0.1.0.post3",
@@ -20,6 +18,7 @@ dependencies = [
     "django-utils-six>=2.0",
     "sentry-sdk[django]>=2.6.0",
     "requests>=2.32.3",
+    "gunicorn>=22.0.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"

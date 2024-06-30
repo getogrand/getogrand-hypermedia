@@ -162,7 +162,7 @@ class AppService(Construct):
             command=[
                 "sh",
                 "-c",
-                "python manage.py collectstatic --no-input && python manage.py migrate && daphne -b 0.0.0.0 -p 8000 getogrand_hypermedia.asgi:application",
+                "python manage.py collectstatic --no-input && python manage.py migrate && gunicorn -b 0.0.0.0:8000 --access-logfile '-' getogrand_hypermedia.wsgi",
             ],
         )
         self.service = patterns.ApplicationLoadBalancedFargateService(
