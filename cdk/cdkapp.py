@@ -16,7 +16,6 @@ from aws_cdk import (
     aws_elasticloadbalancingv2 as elbv2,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as cforigins,
-    aws_internetmonitor as internetmonitor,
 )
 from constructs import Construct
 
@@ -405,15 +404,6 @@ class HypermediaStack(Stack):
             id="CloudfrontAaaaRecord",
             target=self.cf_alias_target,
             zone=self.public_hosted_zone,
-        )
-        self.cf_monitor = internetmonitor.CfnMonitor(
-            scope=self,
-            id="InternetMonitor",
-            monitor_name="getogrand-hypermedia-cloudfront",
-            resources=[
-                f"arn:aws:cloudfront::730335367003:distribution/{self.cf_dist.distribution_id}"
-            ],
-            traffic_percentage_to_monitor=100,
         )
 
 
