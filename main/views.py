@@ -1,4 +1,3 @@
-import asyncio
 import re
 import json
 import requests
@@ -8,20 +7,22 @@ from django.http import HttpRequest, HttpResponse
 from django.template import loader
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import last_modified
+from django.views.decorators.vary import vary_on_headers
 
 from .forms import ProfileForm
 from .models import Profile
 
 
+@vary_on_headers("HX-Target")
+@last_modified(
+    lambda req: Profile.objects.only("modified").get(email="getogrand@hey.com").modified
+)
 def index(request: HttpRequest) -> HttpResponse:
-    profile = (
-        Profile.objects.prefetch_related(
-            "experience_set__duty_set__dutyitem_set__dutysubitem_set",
-        )
-        .filter(email="getogrand@hey.com")
-        .first()
-    )
-    assert profile is not None
+    profile = Profile.objects.prefetch_related(
+        "experience_set__duty_set__dutyitem_set__dutysubitem_set",
+    ).get(email="getogrand@hey.com")
+
     form = ProfileForm(profile=profile, data=request.GET if request.GET else None)
     form.full_clean()
 

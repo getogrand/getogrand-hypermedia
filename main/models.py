@@ -26,6 +26,10 @@ class Experience(TimeStampedModel, DateFramedModel):
         help_text="array of string"
     )
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.profile.save()
+
     def __str__(self) -> str:
         return self.company_name
 
@@ -33,6 +37,10 @@ class Experience(TimeStampedModel, DateFramedModel):
 class Duty(TimeStampedModel, DateFramedModel):
     experience = models.ForeignKey(to=Experience, on_delete=models.CASCADE)
     title = models.CharField()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.experience.save()
 
     def __str__(self) -> str:
         return self.title
@@ -42,6 +50,10 @@ class DutyItem(TimeStampedModel):
     duty = models.ForeignKey(to=Duty, on_delete=models.CASCADE)
     title = models.CharField()
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.duty.save()
+
     def __str__(self) -> str:
         return self.title
 
@@ -49,6 +61,10 @@ class DutyItem(TimeStampedModel):
 class DutySubitem(TimeStampedModel):
     duty_item = models.ForeignKey(to=DutyItem, on_delete=models.CASCADE)
     title = models.CharField()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.duty_item.save()
 
     def __str__(self) -> str:
         return self.title

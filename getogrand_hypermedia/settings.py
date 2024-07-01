@@ -76,9 +76,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "compression_middleware.middleware.CompressionMiddleware",
     "main.middlewares.HealthCheckMiddleware",
     "main.middlewares.DisableAdminI18nMiddleware",
+    "django.middleware.http.ConditionalGetMiddleware",
+    "compression_middleware.middleware.CompressionMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
