@@ -17,6 +17,11 @@ services:
     secrets:
       - django-secret-key
       - db-password
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2048M
   proxy:
     depends_on:
       - app
@@ -35,6 +40,11 @@ services:
     environment:
       UPSTREAMS: ${UPSTREAMS}
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 512M
   db:
     build:
       context: .
@@ -48,6 +58,11 @@ services:
     secrets:
       - db-password
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 512M
 secrets:
   django-secret-key:
     environment: "DJANGO_SECRET_KEY"

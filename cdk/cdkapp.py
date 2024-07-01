@@ -16,6 +16,9 @@ from aws_cdk import (
     aws_elasticloadbalancingv2 as elbv2,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as cforigins,
+    aws_codepipeline as pipeline,
+    aws_codepipeline_actions as pipeline_actions,
+    aws_codebuild as codebuild,
 )
 from constructs import Construct
 
@@ -127,8 +130,8 @@ class AppService(Construct):
         self.task_def = ecs.FargateTaskDefinition(
             scope=self,
             id="TaskDef",
-            cpu=256,
-            memory_limit_mib=512,
+            cpu=1024,
+            memory_limit_mib=2048,
             execution_role=task_exec_role,
             task_role=task_role,
         )
@@ -162,7 +165,7 @@ class AppService(Construct):
             command=[
                 "sh",
                 "-c",
-                "python manage.py collectstatic --no-input && python manage.py migrate && gunicorn -b 0.0.0.0:8000 --access-logfile '-' getogrand_hypermedia.wsgi",
+                "python manage.py migrate && gunicorn",
             ],
         )
         self.service = patterns.ApplicationLoadBalancedFargateService(
@@ -202,6 +205,67 @@ class AppService(Construct):
         self.service.target_group.configure_health_check(enabled=True, path="/health")
         # 서비스 삭제가 클러스터 삭제 전에 이루어지도록 설정
         self.service.node.add_dependency(cluster)
+
+        ecr_change_output = pipeline.Artifact()
+        build_output = pipeline.Artifact()
+        self.build_pipeline = pipeline.Pipeline(
+            scope=self,
+            id="Pipeline",
+            pipeline_type=pipeline.PipelineType.V2,
+            cross_account_keys=False,
+            stages=[
+                pipeline.StageProps(
+                    stage_name="Source",
+                    actions=[
+                        pipeline_actions.EcrSourceAction(
+                            action_name="EcrChangeDetected",
+                            output=ecr_change_output,
+                            repository=self.img_repo,
+                        )
+                    ],
+                ),
+                pipeline.StageOptions(
+                    stage_name="Build",
+                    actions=[
+                        pipeline_actions.CodeBuildAction(
+                            action_name="Build",
+                            input=ecr_change_output,
+                            outputs=[build_output],
+                            project=codebuild.Project(
+                                scope=self,
+                                id="CodeBuildProject",
+                                build_spec=codebuild.BuildSpec.from_object(
+                                    {
+                                        "version": "0.2",
+                                        "phases": {
+                                            "build": {
+                                                "commands": [
+                                                    r"""printf '[{"name":"Container","imageUri":"730335367003.dkr.ecr.ap-northeast-2.amazonaws.com/getogrand-hypermedia/app"}]' >imagedefinitions.json"""
+                                                ]
+                                            }
+                                        },
+                                        "artifacts": {
+                                            "files": ["imagedefinitions.json"]
+                                        },
+                                    }
+                                ),
+                            ),  # type: ignore
+                        )
+                    ],
+                ),
+                pipeline.StageOptions(
+                    stage_name="Deploy",
+                    actions=[
+                        pipeline_actions.EcsDeployAction(
+                            action_name="Deploy",
+                            service=self.service.service,
+                            deployment_timeout=Duration.minutes(5),
+                            input=build_output,
+                        ),
+                    ],
+                ),
+            ],
+        )
 
 
 class HypermediaStack(Stack):

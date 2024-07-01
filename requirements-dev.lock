@@ -64,6 +64,10 @@ django-tailwind==3.8.0
 django-template-debug==0.3.5
 django-template-partials==24.2
 django-utils-six==2.0
+gevent==24.2.1
+    # via gunicorn
+greenlet==3.0.3
+    # via gevent
 gunicorn==22.0.0
 idna==3.7
     # via requests
@@ -109,6 +113,9 @@ requests==2.32.3
 rich==13.7.1
     # via cookiecutter
 sentry-sdk==2.6.0
+setuptools==70.1.1
+    # via zope-event
+    # via zope-interface
 six==1.16.0
     # via python-dateutil
 sqlparse==0.5.0
@@ -135,5 +142,9 @@ urllib3==2.2.1
     # via requests
     # via sentry-sdk
 whitenoise==6.6.0
+zope-event==5.0
+    # via gevent
+zope-interface==6.4.post2
+    # via gevent
 zstandard==0.22.0
     # via django-compression-middleware

@@ -5,7 +5,7 @@ services:
       target: prod
       platforms:
         - "linux/x86_64"
-    command: sh -c "python manage.py collectstatic --no-input && python manage.py migrate && gunicorn -b 0.0.0.0:8000 --access-logfile '-' getogrand_hypermedia.wsgi"
+    command: sh -c "python manage.py migrate && gunicorn"
     restart: unless-stopped
     ports:
       - 8000:8000
