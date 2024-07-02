@@ -17,3 +17,9 @@ wheels/
 
 # CDK output
 cdk.out/
+
+# collected static files
+www/static/
+
+# editor configuration
+.vscode/

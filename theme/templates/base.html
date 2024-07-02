@@ -1,0 +1,90 @@
+{% load static %}
+{% load static tailwind_tags %}
+<!doctype html>
+<html lang="ko-KR">
+	<head>
+    <title>{% if debug %}[DEV] {% endif %}{% block title_prefix %}{% endblock title_prefix %} - getogrand's hypermedia</title>
+		<meta name="author" content="Wonyoung Ju">
+    <meta name="description" content="getogrand's hypermedia collection.">
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		<meta name="htmx-config" content='{"scrollBehavior":"auto", "triggerSpecsCache": {}}'>
+		<link rel="preload" href="{% static "fonts/GowunBatang-Regular.woff2" %}" as="font" type="font/woff2" crossorigin>
+		<link rel="preload" href="{% static "fonts/S-CoreDream-5Medium.woff2" %}" as="font" type="font/woff2" crossorigin>
+		<link rel="preload" href="{% static "fonts/S-CoreDream-3Light.woff2" %}" as="font" type="font/woff2" crossorigin>
+		<style>
+			@font-face {
+				font-family: 'GowunBatang-Regular';
+				src: url('{% static "fonts/GowunBatang-Regular.woff2" %}') format('woff2');
+				font-weight: normal;
+				font-display: swap;
+			}
+
+			@font-face {
+				font-family: 'S-CoreDream-5Medium';
+				src: url('{% static "fonts/S-CoreDream-5Medium.woff2" %}') format('woff2');
+				font-weight: normal;
+				font-display: swap;
+			}
+
+			@font-face {
+				font-family: 'S-CoreDream-3Light';
+				src: url('{% static "fonts/S-CoreDream-3Light.woff2" %}') format('woff2');
+				font-weight: normal;
+				font-display: swap;
+			}
+
+			html {
+				font-size: 18px;
+			}
+		</style>
+
+		{% if debug %}
+			{% now "U" as timestamp %}
+			{% tailwind_preload_css v=timestamp %}
+			{% tailwind_css v=timestamp %}
+		{% else %}
+			{% tailwind_preload_css %}
+			{% tailwind_css %}
+		{% endif %}
+
+		{% if not debug %}
+		<script defer src="{% static "js/sentry.browser.8.10.0.min.js" %}" crossorigin="anonymous"></script>
+		{% endif %}
+
+		{% if debug %}
+		<script defer src="{% static "js/_hyperscript.0.9.12.js" %}"></script>
+		{% else %}
+		<script defer src="{% static "js/_hyperscript.0.9.12.min.js" %}"></script>
+		{% endif %}
+
+		{% if debug %}
+		<script defer src="{% static "js/htmx.2.0.0.js" %}"></script>
+		{% else %}
+		<script defer src="{% static "js/htmx.2.0.0.min.js" %}"></script>
+		{% endif %}
+	</head>
+
+	<body class="bg-gray-50 leading-relaxed tracking-normal font-sans break-keep break-words whitespace-normal text-pretty" hx-boost="true"
+		{% if debug %}_="on load js htmx.logAll()"{% endif %}
+	>
+		<header class="mx-4 mb-2 px-1 pt-4 pb-1 border-b-2 border-gray-800 uppercase text-xl">
+			<a href="/" class="align-middle">getogrand's hypermedia</a>
+		</header>
+		<div class="container mx-auto">
+			{% block container_content %}{% endblock container_content %}
+		</div>
+	</body>
+
+	{% if not debug %}
+	<script type="text/hyperscript">
+		on load js {
+			Sentry.init({
+				dsn: "https://014368f40281b9972cbb18d0d5222803@o303432.ingest.us.sentry.io/4507459219685376",
+				tunnel: "/sentry_tunnel"
+			});
+		}
+	</script>
+	{% endif %}
+</html>

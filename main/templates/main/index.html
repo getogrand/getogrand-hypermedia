@@ -1,17 +1,152 @@
-<!doctype html>
-<html lang="ko-KR">
-  <head>
-    <meta charset="utf-8">
-    <meta name="author" content="Wonyoung Ju">
-    <meta name="description" content="getogrand's hypermedia collection.">
-    <title>getogrand's hypermedia</title>
-  </head>
-  <body>
-    <header>
-      <h1>getogrand's hypermedia collection</h1>
-    </header>
-    <main>
-      <p>Hello World!</p>
-    </main>
-  </body>
-</html>
+{% extends "base.html" %}
+
+{% load partials %}
+{% load static %}
+
+{% block title_prefix %}main{% endblock title_prefix %}
+
+{% partialdef experience_details %}
+{% if experience.id in form.cleaned_data.expanded_experience_ids %}
+<article id="experience-{{ experience.id }}-details" class="grid not-prose font-sans mt-8">
+  <div class="flex flex-col overflow-hidden">
+    <section class="flex justify-between items-baseline">
+      <h3 id="experience-{{ experience.id }}-company_name" class="text-xl">{{ experience.company_name }}</h3>
+      <div id="experience-{{ experience.id }}-duration" class="text-sm text-gray-400 font-sans-light">
+        <time datetime="{{ experience.start|date:"Y-m" }}">{{ experience.start|date:"Y.m" }}</time> ~ <time datetime="{{ experience.end|date:"Y-m" }}">{{ experience.end|date:"Y.m" }}</time>
+      </div>
+    </section>
+
+    <ul id="experience-{{ experience.id }}-positions" class="text-sm leading-relaxed font-sans-light mt-1">
+      {% for position in experience.positions %}<li><span>{{ position }}</span></li>{% endfor %}
+    </ul>
+
+    <ul id="experience-{{ experience.id }}-duties" class="mt-4 mb-5 flex flex-col gap-7">
+      {% for duty in experience.duty_set.all %}
+      <li>
+        <article>
+          <section class="flex flex-wrap justify-between items-baseline mb-2">
+            <h4>{{ duty.title }}</h4>
+            {% if duty.start %}
+            <div class="text-sm text-gray-400 font-sans-light text-right grow">
+              <time datetime="{{ duty.start|date:"Y-m" }}">{{ duty.start|date:"Y.m" }}</time> ~ <time datetime="{{ duty.end|date:"Y-m" }}">{{ duty.end|date:"Y.m" }}</time>
+            </div>
+            {% endif %}
+          </section>
+          <ul class="font-sans-light text-sm leading-relaxed flex flex-col gap-4">
+            {% for duty_item in duty.dutyitem_set.all %}
+            <li>
+              {{ duty_item.title }}
+              {% if duty_item.dutysubitem_set.all %}
+              <ul class="ml-6 list-disc list-outside flex flex-col gap-1 mt-2">
+                {% for subitem in duty_item.dutysubitem_set.all %}
+                <li>{{ subitem.title }}</li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </article>
+      </li>
+      {% endfor %}
+    </ul>
+
+    <button
+      id="experience-{{ experience.id }}-collapse" type="submit"
+      class="prose font-serif before:content-['↼_'] mb-6 self-end"
+      hx-get="/" hx-target="#experience-{{ experience.id }}-details"
+      hx-swap="outerHTML swap:0.6s"
+      hx-vals="js:{expanded_experience_ids: getExpandedExperienceIds().filter(id => id !== '{{ experience.id }}')}"
+      _="on click js document.getElementById('experience-{{ experience.id }}').scrollIntoView({behavior: 'smooth'}) end">
+      관련 경력 사항 가리기
+    </button>
+    <img class="w-24 self-center mt-14 mb-8" src="{% static "main/noun-plant-2215382.svg" %}" />
+  </div>
+</article>
+{% else %}
+<button
+  id="experience-{{ experience.id }}-expand" type="submit"
+  class="before:content-['⇀_'] mb-6 self-start"
+  hx-get="/" hx-swap="outerHTML swap:0.3s"
+  hx-vals="js:{expanded_experience_ids: getExpandedExperienceIds().concat(['{{ experience.id }}'])}">
+  관련 경력 사항 보기
+</button>
+{% endif %}
+{% endpartialdef %}
+
+{% partialdef experience %}
+{% with select_id=form.expanded_experience_ids.auto_id %}
+<article id="experience-{{ experience.id }}" class="flex flex-col">
+  <p id="experience-{{ experience.id }}-story" class="indent-2">{{ experience.story }}</p>
+</article>
+{% partial experience_details %}
+{% endwith %}
+{% endpartialdef %}
+
+{% block container_content %}
+<form action="/" method="get" hx-replace-url="true">
+  <article class="p-4 mt-8 mb-24 prose font-serif">
+    <p class="indent-2">안녕하세요. 주원영입니다. 2013년부터 소프트웨어 개발자로 일하며 살고 있습니다. 연락은 <a href="mailto:getogrand@hey.com">getogrand@hey.com</a>으로 부탁드립니다. 단순 수다, 업계 이야기, 기술에 대한 문의/논의 및 이를 위한 커피챗 요청 환영합니다.</p>
+
+    <h2 id="accounts" class="group"><a href="#accounts" class="no-underline hover:underline decoration-gray-500 relative"><span class="hidden sm:group-hover:inline-block sm:group-target:inline-block sm:absolute sm:-start-5 sm:text-gray-500">#</span>계정들</a></h2>
+
+    <ul>
+      <li><a class="no-underline flex flex-wrap items-baseline gap-x-1" href="https://x.com/getogrand" target="_blank"><span class="underline">Twitter(𝕏)</span><span class="text-xs text-gray-400">https://x.com/getogrand</span></a></li>
+      <li><a class="no-underline flex flex-wrap items-baseline gap-x-1" href="https://github.com/getogrand" target="_blank"><span class="underline">GitHub</span><span class="text-xs text-gray-400">https://github.com/getogrand</span></a></li>
+      <li><a class="no-underline flex flex-wrap items-baseline gap-x-1" href="https://www.instagram.com/getogrand_" target="_blank"><span class="underline">Instagram</span><span class="text-xs text-gray-400">https://www.instagram.com/getogrand_</span></a></li>
+      <li><a class="no-underline flex flex-wrap items-baseline gap-x-1" href="https://www.linkedin.com/in/wonyoung-ju" target="_blank"><span class="underline">LinkedIn</span><span class="text-xs text-gray-400">https://www.linkedin.com/in/wonyoung-ju</span></a></li>
+      <li><a class="no-underline flex flex-wrap items-baseline gap-x-1" href="https://stackoverflow.com/users/12509847/getogrand" target="_blank"><span class="underline">StackOverflow</span><span class="text-xs text-gray-400">https://stackoverflow.com/users/12509847/getogrand</span></a></li>
+      <li><a class="no-underline flex flex-wrap items-baseline gap-x-1" href="https://xn--o39a90m89r.com/@getogrand" target="_blank"><span class="underline">적독가(積讀家)</span><span class="text-xs text-gray-400">https://xn--o39a90m89r.com/@getogrand</span></a></li>
+    </ul>
+
+    <h2 id="career" class="group"><a href="#career" class="group no-underline hover:underline decoration-gray-500 relative"><span class="hidden sm:group-hover:inline-block sm:group-target:inline-block sm:absolute sm:-start-5 sm:text-gray-500">#</span>커리어</a></h2>
+
+    {% with select_id=form.expanded_experience_ids.auto_id %}
+    {% for experience in profile.experience_set.all %}
+    <article id="experience-{{ experience.id }}" class="flex flex-col {% if forloop.first %}-mt-4{% endif %}">
+      <p id="experience-{{ experience.id }}-story" class="indent-2">{{ experience.story }}</p>
+    </article>
+    {% partial experience_details %}
+    {% endfor %}
+    {% endwith %}
+
+    <p class="indent-2">다음 커리어는 다시 Full-Stack 웹 개발자 혹은 백엔드 개발자로 생각하고 있습니다. HTML-over-the-wire 류의 기술과 Full-Stack 프레임워크를 함께 써서 제가 생각한 합리적인 기술 스택을 직접 검증해 보고 싶습니다. 기술적 검증에 성공하고 비즈니스도 잘 되어 과연 이 스택으로 어디까지 스케일업이 가능한지 확인할 수 있다면 더할 나위 없이 좋겠습니다.</p>
+  </article>
+
+  {% partialdef select inline=True %}{{ form.expanded_experience_ids }}{% endpartialdef %}
+</form>
+
+<style>
+article[id^=experience-][id$=-details] {
+  opacity: 1;
+  grid-template-rows: 1fr;
+  transition: opacity 0.3s ease-out 0.3s, grid-template-rows 0.3s ease-out 0.3s;
+}
+article[id^=experience-][id$=-details].htmx-swapping,
+article[id^=experience-][id$=-details].htmx-added {
+  overflow: hidden;
+  min-height: 0;
+  opacity: 0;
+  grid-template-rows: 0fr;
+}
+
+button[id^=experience-][type=submit] {
+  opacity: 1;
+  transition: opacity 0.3s ease-out;
+}
+button[id^=experience-][type=submit].htmx-swapping,
+button[id^=experience-][type=submit].htmx-added {
+  opacity: 0;
+}
+</style>
+<script>
+/**
+ * @returns {string[]}
+ */
+function getExpandedExperienceIds() {
+  return Array.from(
+    document.getElementById('{{ form.expanded_experience_ids.auto_id }}').selectedOptions
+  ).map(opt => opt.value)
+}
+</script>
+{% endblock container_content %}

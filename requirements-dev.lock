@@ -6,20 +6,17 @@
 #   features: []
 #   all-features: false
 #   with-sources: false
+#   generate-hashes: false
 
+arrow==1.3.0
+    # via cookiecutter
 asgiref==3.8.1
-    # via daphne
     # via django
+    # via django-browser-reload
+    # via django-stubs
 attrs==23.2.0
-    # via automat
     # via cattrs
     # via jsii
-    # via service-identity
-    # via twisted
-autobahn==23.6.2
-    # via daphne
-automat==22.10.0
-    # via twisted
 aws-cdk-asset-awscli-v1==2.2.202
     # via aws-cdk-lib
 aws-cdk-asset-kubectl-v20==2.1.2
@@ -27,44 +24,71 @@ aws-cdk-asset-kubectl-v20==2.1.2
 aws-cdk-asset-node-proxy-agent-v6==2.0.3
     # via aws-cdk-lib
 aws-cdk-lib==2.140.0
+binaryornot==0.4.4
+    # via cookiecutter
+brotli==1.1.0
+    # via django-compression-middleware
+    # via whitenoise
 cattrs==23.2.3
     # via jsii
-cffi==1.16.0
-    # via cryptography
-constantly==23.10.4
-    # via twisted
+certifi==2024.2.2
+    # via requests
+    # via sentry-sdk
+chardet==5.2.0
+    # via binaryornot
+charset-normalizer==3.3.2
+    # via requests
+click==8.1.7
+    # via cookiecutter
 constructs==10.3.0
     # via aws-cdk-lib
-cryptography==42.0.5
-    # via autobahn
-    # via pyopenssl
-    # via service-identity
-daphne==4.1.2
+cookiecutter==2.6.0
 django==5.0.4
-h2==4.1.0
-    # via twisted
-hpack==4.0.0
-    # via h2
-hyperframe==6.0.1
-    # via h2
-hyperlink==21.0.0
-    # via autobahn
-    # via twisted
+    # via django-browser-reload
+    # via django-compression-middleware
+    # via django-model-utils
+    # via django-stubs
+    # via django-stubs-ext
+    # via django-tailwind
+    # via django-template-partials
+    # via sentry-sdk
+django-browser-reload==1.12.1
+    # via django-tailwind
+django-compression-middleware==0.5.0
+django-light==0.1.0.post3
+django-model-utils==4.5.1
+django-stubs==5.0.2
+django-stubs-ext==5.0.2
+    # via django-stubs
+django-tailwind==3.8.0
+django-template-debug==0.3.5
+django-template-partials==24.2
+django-utils-six==2.0
+gevent==24.2.1
+    # via gunicorn
+greenlet==3.0.3
+    # via gevent
+gunicorn==22.0.0
 idna==3.7
-    # via hyperlink
-    # via twisted
+    # via requests
 importlib-resources==6.4.0
     # via jsii
-incremental==22.10.0
-    # via twisted
+jinja2==3.1.4
+    # via cookiecutter
 jsii==1.98.0
     # via aws-cdk-asset-awscli-v1
     # via aws-cdk-asset-kubectl-v20
     # via aws-cdk-asset-node-proxy-agent-v6
     # via aws-cdk-lib
     # via constructs
-priority==1.3.0
-    # via twisted
+markdown-it-py==3.0.0
+    # via rich
+markupsafe==2.1.5
+    # via jinja2
+mdurl==0.1.2
+    # via markdown-it-py
+packaging==24.1
+    # via gunicorn
 psycopg==3.1.18
 psycopg-binary==3.1.18
     # via psycopg
@@ -75,31 +99,29 @@ publication==0.0.3
     # via aws-cdk-lib
     # via constructs
     # via jsii
-pyasn1==0.6.0
-    # via pyasn1-modules
-    # via service-identity
-pyasn1-modules==0.4.0
-    # via service-identity
-pycparser==2.22
-    # via cffi
-pyopenssl==24.1.0
-    # via twisted
+pygments==2.18.0
+    # via rich
 python-dateutil==2.9.0.post0
+    # via arrow
     # via jsii
-service-identity==24.1.0
-    # via twisted
-setuptools==69.5.1
-    # via autobahn
+python-slugify==8.0.4
+    # via cookiecutter
+pyyaml==6.0.1
+    # via cookiecutter
+requests==2.32.3
+    # via cookiecutter
+rich==13.7.1
+    # via cookiecutter
+sentry-sdk==2.6.0
+setuptools==70.1.1
+    # via zope-event
     # via zope-interface
 six==1.16.0
-    # via automat
     # via python-dateutil
 sqlparse==0.5.0
     # via django
-twisted==24.3.0
-    # via daphne
-txaio==23.1.1
-    # via autobahn
+text-unidecode==1.3
+    # via python-slugify
 typeguard==2.13.3
     # via aws-cdk-asset-awscli-v1
     # via aws-cdk-asset-kubectl-v20
@@ -107,9 +129,22 @@ typeguard==2.13.3
     # via aws-cdk-lib
     # via constructs
     # via jsii
+types-python-dateutil==2.9.0.20240316
+    # via arrow
+types-pyyaml==6.0.12.20240311
+    # via django-stubs
 typing-extensions==4.11.0
+    # via django-stubs
+    # via django-stubs-ext
     # via jsii
     # via psycopg
-    # via twisted
-zope-interface==6.3
-    # via twisted
+urllib3==2.2.1
+    # via requests
+    # via sentry-sdk
+whitenoise==6.6.0
+zope-event==5.0
+    # via gevent
+zope-interface==6.4.post2
+    # via gevent
+zstandard==0.22.0
+    # via django-compression-middleware

@@ -6,8 +6,19 @@ authors = [{ name = "Wonyoung Ju", email = "getogrand@hey.com" }]
 dependencies = [
     "django>=5.0.4",
     "psycopg[binary]>=3.1.18",
-    "daphne>=4.1.2",
-    "twisted[tls,http2]>=24.3.0",
+    "django-tailwind[reload]>=3.8.0",
+    "django-model-utils>=4.5.1",
+    "django-light>=0.1.0.post3",
+    "django-template-partials>=24.2",
+    "django-stubs>=5.0.2",
+    "django-stubs-ext>=5.0.2",
+    "whitenoise[brotli]>=6.6.0",
+    "django-compression-middleware>=0.5.0",
+    "django-template-debug>=0.3.5",
+    "django-utils-six>=2.0",
+    "sentry-sdk[django]>=2.6.0",
+    "requests>=2.32.3",
+    "gunicorn[gevent]>=22.0.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -15,13 +26,14 @@ requires-python = ">= 3.8"
 [tool.rye]
 managed = true
 virtual = true
-dev-dependencies = ["aws-cdk-lib>=2.140.0"]
+dev-dependencies = ["aws-cdk-lib>=2.140.0", "cookiecutter>=2.6.0"]
 
 [tool.rye.scripts]
 dev = "docker compose -f compose.base.yaml -f compose.local.yaml up --build"
-prod = "docker compose -f compose.base.yaml -f compose.prod.yaml up --build"
+prod = { cmd = "docker compose -f compose.base.yaml -f compose.prod.yaml up --build", env = { UPSTREAMS = "app:8000", DEBUG = "False" } }
 manage = "docker compose -f compose.base.yaml -f compose.local.yaml run --build app python manage.py"
 shell = "docker compose -f compose.base.yaml -f compose.local.yaml run --build app python manage.py shell"
 build = "docker compose -f compose.base.yaml -f compose.prod.yaml build"
 push = "docker compose -f compose.base.yaml -f compose.prod.yaml push"
 ecr-login = "/bin/zsh -c \"aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 730335367003.dkr.ecr.ap-northeast-2.amazonaws.com\""
+deploy = "/bin/zsh -c \"rye run ecr-login && rye run build && rye run push\""

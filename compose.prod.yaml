@@ -1,20 +1,21 @@
 services:
   app:
-    image: ghcr.io/getogrand/getogrand-hypermedia-app
+    image: 730335367003.dkr.ecr.ap-northeast-2.amazonaws.com/getogrand-hypermedia/app
     build:
+      target: prod
       platforms:
         - "linux/x86_64"
-    command: sh -c "python manage.py migrate && daphne -b 0.0.0.0 -p 8000 getogrand_hypermedia.asgi:application"
+    command: sh -c "python manage.py migrate && gunicorn"
     restart: unless-stopped
     ports:
-      - 80:8000
+      - 8000:8000
   proxy:
-    image: ghcr.io/getogrand/getogrand-hypermedia-proxy
+    image: 730335367003.dkr.ecr.ap-northeast-2.amazonaws.com/getogrand-hypermedia/proxy
     build:
       platforms:
         - "linux/x86_64"
   db:
-    image: ghcr.io/getogrand/getogrand-hypermedia-db
+    image: 730335367003.dkr.ecr.ap-northeast-2.amazonaws.com/getogrand-hypermedia/db
     build:
       platforms:
         - "linux/x86_64"

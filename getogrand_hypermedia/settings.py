@@ -12,6 +12,13 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import django_stubs_ext
+import sentry_sdk
+
+from .utils import get_self_ip, read_secret_file, monkeypatch_for_template_debug
+
+monkeypatch_for_template_debug()
+django_stubs_ext.monkeypatch()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,36 +28,69 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ["SECRET_KEY"]
+SECRET_KEY = (
+    read_secret_file(os.environ["SECRET_KEY_FILE"])
+    if "SECRET_KEY_FILE" in os.environ
+    else os.environ["SECRET_KEY"]
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG: bool = eval(os.environ.get("DEBUG", "False"))
+TEMPLATE_DEBUG = DEBUG
 
-ALLOWED_HOSTS = [".localhost", "127.0.0.1", ".getogrand.com", "app"]
+ALLOWED_HOSTS = (
+    [".localhost", "127.0.0.1", ".getogrand.media", "app"] + list(get_self_ip())
+    if not DEBUG
+    else ["*"]
+)
 
+if DEBUG:
+    INTERNAL_IPS = ["127.0.0.1"] + [
+        f"192.168.{a}.{b}" for a in range(1, 256) for b in range(1, 256)
+    ]
+
+if not DEBUG:
+    sentry_sdk.init(
+        dsn="https://0a1b9010ce08d2a62d63777fca3302cd@o303432.ingest.us.sentry.io/4507459219685376",
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+    )
 
 # Application definition
 
 INSTALLED_APPS = [
-    "daphne",
+    # Third Party
+    "whitenoise.runserver_nostatic",
+    "template_partials",
+    "django_light",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "tailwind",
+    "template_debug",
+    "django_browser_reload",
+    # Our Apps
+    "theme",
     "main",
 ]
 
 MIDDLEWARE = [
     "main.middlewares.HealthCheckMiddleware",
+    "main.middlewares.DisableAdminI18nMiddleware",
+    "django.middleware.http.ConditionalGetMiddleware",
+    "compression_middleware.middleware.CompressionMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
 ROOT_URLCONF = "getogrand_hypermedia.urls"
@@ -71,6 +111,20 @@ TEMPLATES = [
     },
 ]
 
+CSRF_TRUSTED_ORIGINS = ["https://localhost"] if DEBUG else ["https://getogrand.media"]
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console.debug": {"level": "DEBUG", "class": "logging.StreamHandler"}},
+    "loggers": {
+        "django.db.backends": {
+            "level": "DEBUG",
+            "handlers": ["console.debug"],
+        },
+    },
+}
+
 WSGI_APPLICATION = "getogrand_hypermedia.wsgi.application"
 ASGI_APPLICATION = "getogrand_hypermedia.asgi.application"
 
@@ -83,7 +137,9 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("DB_DATABASE", "postgres"),
         "USER": os.getenv("DB_USERNAME", "postgres"),
-        "PASSWORD": os.environ["DB_PASSWORD"],
+        "PASSWORD": read_secret_file(os.environ["DB_PASSWORD_FILE"])
+        if "DB_PASSWORD_FILE" in os.environ
+        else os.environ["DB_PASSWORD"],
         "HOST": os.environ["DB_HOST"],
         "PORT": os.getenv("DB_PORT", "5432"),
     }
@@ -125,8 +181,20 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "www/static/"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# django-tailwind
+TAILWIND_APP_NAME = "theme"
