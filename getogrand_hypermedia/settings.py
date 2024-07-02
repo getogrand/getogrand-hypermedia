@@ -38,8 +38,10 @@ SECRET_KEY = (
 DEBUG: bool = eval(os.environ.get("DEBUG", "False"))
 TEMPLATE_DEBUG = DEBUG
 
-ALLOWED_HOSTS = [".localhost", "127.0.0.1", ".getogrand.media", "app"] + list(
-    get_self_ip()
+ALLOWED_HOSTS = (
+    [".localhost", "127.0.0.1", ".getogrand.media", "app"] + list(get_self_ip())
+    if not DEBUG
+    else ["*"]
 )
 
 if DEBUG:
