@@ -3,7 +3,7 @@
 <!doctype html>
 <html lang="ko-KR">
 	<head>
-    <title>{% block title_prefix %}{% endblock title_prefix %} :: getogrand's hypermedia</title>
+    <title>{% if debug %}[DEV] {% endif %}{% block title_prefix %}{% endblock title_prefix %} - getogrand's hypermedia</title>
 		<meta name="author" content="Wonyoung Ju">
     <meta name="description" content="getogrand's hypermedia collection.">
 		<meta charset="utf-8">
@@ -33,6 +33,10 @@
 				src: url('{% static "fonts/S-CoreDream-3Light.woff2" %}') format('woff2');
 				font-weight: normal;
 				font-display: swap;
+			}
+
+			html {
+				font-size: 18px;
 			}
 		</style>
 
