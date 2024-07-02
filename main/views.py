@@ -9,11 +9,13 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import last_modified
 from django.views.decorators.vary import vary_on_headers
+from django.views.decorators.cache import cache_control
 
 from .forms import ProfileForm
 from .models import Profile
 
 
+@cache_control(s_maxage=3600, stale_while_revalidated=60)
 @vary_on_headers("HX-Target")
 @last_modified(
     lambda req: Profile.objects.only("modified").get(email="getogrand@hey.com").modified
