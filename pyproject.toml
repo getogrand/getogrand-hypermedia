@@ -36,3 +36,4 @@ shell = "docker compose -f compose.base.yaml -f compose.local.yaml run --build a
 build = "docker compose -f compose.base.yaml -f compose.prod.yaml build"
 push = "docker compose -f compose.base.yaml -f compose.prod.yaml push"
 ecr-login = "/bin/zsh -c \"aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 730335367003.dkr.ecr.ap-northeast-2.amazonaws.com\""
+deploy = "/bin/zsh -c \"rye run ecr-login && rye run build && rye run push\""
