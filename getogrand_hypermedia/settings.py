@@ -14,6 +14,8 @@ from pathlib import Path
 import os
 import django_stubs_ext
 import sentry_sdk
+from sentry_sdk.types import Event as SentryEvent, Hint as SentryHint
+from django.core.exceptions import DisallowedHost
 
 from .utils import get_self_ip, read_secret_file, monkeypatch_for_template_debug
 
@@ -50,10 +52,18 @@ if DEBUG:
     ]
 
 if not DEBUG:
+
+    def before_send(event: SentryEvent, hint: SentryHint) -> SentryEvent | None:
+        exec_info = hint.get("exec_info")
+        if exec_info and isinstance(exec_info, DisallowedHost):
+            event["level"] = "warning"
+        return event
+
     sentry_sdk.init(
         dsn="https://0a1b9010ce08d2a62d63777fca3302cd@o303432.ingest.us.sentry.io/4507459219685376",
         traces_sample_rate=1.0,
         profiles_sample_rate=1.0,
+        before_send=before_send,
     )
 
 # Application definition
