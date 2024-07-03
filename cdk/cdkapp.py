@@ -68,7 +68,6 @@ class DbService(Construct):
                 command=["CMD-SHELL", "pg_isready -U postgres"]
             ),
             logging=ecs.LogDrivers.aws_logs(stream_prefix="hypermedia-db"),
-            memory_limit_mib=512,
             port_mappings=[
                 ecs.PortMapping(
                     container_port=5432, host_port=5432, protocol=ecs.Protocol.TCP
@@ -150,7 +149,6 @@ class AppService(Construct):
                 ]
             ),
             logging=ecs.LogDrivers.aws_logs(stream_prefix="hypermedia-app"),
-            memory_limit_mib=512,
             port_mappings=[ecs.PortMapping(container_port=8000, host_port=8000)],
             secrets={
                 "SECRET_KEY": ecs.Secret.from_secrets_manager(
@@ -198,8 +196,6 @@ class AppService(Construct):
             protocol=elbv2.ApplicationProtocol.HTTPS,
             redirect_http=True,
             target_protocol=elbv2.ApplicationProtocol.HTTP,
-            cpu=256,
-            memory_limit_mib=512,
             task_definition=self.task_def,
         )
         self.service.target_group.configure_health_check(enabled=True, path="/health")
