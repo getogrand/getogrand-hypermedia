@@ -191,6 +191,7 @@ class AppService(Construct):
             domain_name="app.getogrand.media",
             domain_zone=public_hosted_zone,
             enable_ecs_managed_tags=True,
+            enable_execute_command=True,
             health_check_grace_period=Duration.seconds(5),
             idle_timeout=Duration.seconds(30),
             protocol=elbv2.ApplicationProtocol.HTTPS,
