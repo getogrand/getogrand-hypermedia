@@ -54,9 +54,9 @@ if DEBUG:
 if not DEBUG:
 
     def before_send(event: SentryEvent, hint: SentryHint) -> SentryEvent | None:
-        exec_info = hint.get("exec_info")
-        if exec_info and isinstance(exec_info, DisallowedHost):
-            event["level"] = "warning"
+        exc_info = hint.get("exc_info")
+        if exc_info and isinstance(exc_info[1], DisallowedHost):
+            return
         return event
 
     sentry_sdk.init(
