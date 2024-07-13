@@ -62,7 +62,7 @@ if not DEBUG:
     sentry_sdk.init(
         dsn="https://0a1b9010ce08d2a62d63777fca3302cd@o303432.ingest.us.sentry.io/4507459219685376",
         traces_sample_rate=1.0,
-        profiles_sample_rate=1.0,
+        profiles_sample_rate=0.5,
         before_send=before_send,
     )
 
