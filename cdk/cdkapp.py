@@ -129,8 +129,8 @@ class AppService(Construct):
         self.task_def = ecs.FargateTaskDefinition(
             scope=self,
             id="TaskDef",
-            cpu=1024,
-            memory_limit_mib=2048,
+            cpu=512,
+            memory_limit_mib=1024,
             execution_role=task_exec_role,
             task_role=task_role,
         )
