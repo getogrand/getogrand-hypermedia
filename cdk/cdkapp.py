@@ -298,7 +298,6 @@ class HypermediaStack(Stack):
         self.cluster = ecs.Cluster(
             scope=self,
             id="EcsCluster",
-            container_insights=True,
             enable_fargate_capacity_providers=True,
             default_cloud_map_namespace=ecs.CloudMapNamespaceOptions(
                 name="map.getogrand.media"
@@ -449,7 +448,6 @@ class HypermediaStack(Stack):
             enable_ipv6=True,
             enable_logging=True,
             log_includes_cookies=True,
-            publish_additional_metrics=True,
         )
         self.cf_alias_target = route53.RecordTarget.from_alias(
             targets.CloudFrontTarget(self.cf_dist)  # type: ignore
