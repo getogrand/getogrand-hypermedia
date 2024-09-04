@@ -5,7 +5,7 @@ services:
       target: prod
       platforms:
         - "linux/x86_64"
-    command: sh -c "python manage.py migrate && gunicorn"
+    command: sh -c "uv run python manage.py migrate && uv run gunicorn"
     restart: unless-stopped
     ports:
       - 8000:8000
