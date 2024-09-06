@@ -1,5 +1,4 @@
 .dockerignore
-.env
 .gitignore
 .ruby-lsp/
 .ruff_cache/

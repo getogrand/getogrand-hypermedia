@@ -1,0 +1,5 @@
+# Name of your application. Used to uniquely configure containers.
+service: getogrand-hypermedia
+
+# Name of the container image.
+image: getogrand/getogrand-hypermedia-app
