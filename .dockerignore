@@ -9,7 +9,5 @@ cdk.out/
 cdk/
 dockerfiles/
 www/static/
-cdk.context.json
-cdk.json
 compose.*.yaml
 .idea/

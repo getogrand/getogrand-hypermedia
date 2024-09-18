@@ -6,9 +6,6 @@
 
 이 소스를 로컬에서 개발하고 배포하기 위해서는 아래 의존성들을 미리 설치해야 합니다.
 
-- [asdf-vm]: Node.js 런타임 관리를 위해 사용합니다. `aws-cdk`가 Node.js에 의존합니다.
-- [aws-cli]: `aws-cdk`가 이에 의존합니다. 또한 ECR에 로그인하기 위해 필요합니다.
-- [aws-cdk]: AWS에 인프라를 배포하기 위해 필요합니다.
 - [Docker Engine]: 개발과 배포시에 Docker를 사용합니다.
     - macOS를 사용하는 경우 [Docker Desktop]을 통해 설치하기 보다는 [OrbStack] 이용을 추천합니다. [Docker Desktop]보다 메모리 회수가 훨씬 잘 됩니다.
 - [Docker Compose]: 로컬에서 컨테이너들을 띄워 관리하기 위해 필요합니다.
@@ -23,10 +20,7 @@
 
 
 [getogrand.media]: https://getogrand.media
-[asdf-vm]: https://asdf-vm.com/
 [uv]: https://github.com/astral-sh/uv
-[aws-cli]: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html#getting-started-install-instructions
-[aws-cdk]: https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install
 [Docker Engine]: https://docs.docker.com/engine/install/
 [Docker Desktop]: https://docs.docker.com/desktop/install/mac-install/
 [Docker Compose]: https://docs.docker.com/compose/install/
