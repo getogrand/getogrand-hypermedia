@@ -1,21 +1,21 @@
 services:
   app:
-    image: 730335367003.dkr.ecr.ap-northeast-2.amazonaws.com/getogrand-hypermedia/app
+    image: ghcr.io/getogrand/getogrand-hypermedia-app
     build:
       target: prod
       platforms:
         - "linux/x86_64"
-    command: sh -c "python manage.py migrate && gunicorn"
+    command: sh -c "uv run python manage.py migrate && uv run gunicorn"
     restart: unless-stopped
     ports:
       - 8000:8000
   proxy:
-    image: 730335367003.dkr.ecr.ap-northeast-2.amazonaws.com/getogrand-hypermedia/proxy
+    image: ghcr.io/getogrand/getogrand-hypermedia-proxy
     build:
       platforms:
         - "linux/x86_64"
   db:
-    image: 730335367003.dkr.ecr.ap-northeast-2.amazonaws.com/getogrand-hypermedia/db
+    image: ghcr.io/getogrand/getogrand-hypermedia-db
     build:
       platforms:
         - "linux/x86_64"

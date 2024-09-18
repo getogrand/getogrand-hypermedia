@@ -2,7 +2,7 @@ services:
   app:
     build:
       target: local
-    command: concurrently -n tailwind,runserver "python manage.py tailwind start" "python manage.py runserver 0.0.0.0:8000"
+    command: concurrently -n tailwind,runserver "uv run python manage.py tailwind start" "uv run python manage.py runserver 0.0.0.0:8000"
     ports:
       - 8000:8000
     volumes:
