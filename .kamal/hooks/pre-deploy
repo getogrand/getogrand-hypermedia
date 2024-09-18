@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+
+import os
+from subprocess import run
+
+hosts = os.environ["KAMAL_HOSTS"].split(",")
+
+for host in hosts:
+    destination = f"root@{host}"
+    print("Ensuring acme.json file for Let's Encrypt exists")
+    result = run(
+        ["ssh", destination, "[ ! -e /etc/letsencrypt/acme.json ] && mkdir -p /etc/letsencrypt && touch /etc/letsencrypt/acme.json && chmod 600 /etc/letsencrypt/acme.json"],
+        capture_output=True, text=True)
+    if result.returncode == 0:
+        print(result.stdout)
+    else:
+        print(result.stderr)

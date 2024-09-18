@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/var/cache/apk <<EOF
 
   apk del --no-network .build-deps;
 
-  apk add nodejs npm;
+  apk add curl nodejs npm;
 EOF
 
 RUN --mount=type=cache,target=/root/.cache/uv <<EOF
@@ -53,3 +53,5 @@ RUN --mount=type=cache,target=/root/.cache/uv <<EOF
   env SECRET_KEY='noop' DB_PASSWORD='noop' DB_HOST='noop' \
     sh -c 'uv run python manage.py tailwind build && uv run python manage.py collectstatic --no-input'
 EOF
+
+ENTRYPOINT ["sh", "-c", "uv run python manage.py migrate && uv run gunicorn"]

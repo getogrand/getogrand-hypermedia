@@ -14,7 +14,7 @@ wheels/
 
 # environment variables
 .env
-.env.production
+.env.*
 
 # CDK output
 cdk.out/
