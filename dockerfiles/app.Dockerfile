@@ -12,9 +12,6 @@ RUN --mount=type=cache,target=/var/cache/apk <<EOF
   apk add tzdata;
 EOF
 
-COPY uv.lock /app/uv.lock
-COPY pyproject.toml /app/pyproject.toml
-
 RUN --mount=type=cache,target=/var/cache/apk <<EOF
   set -eux;
 
@@ -25,6 +22,9 @@ RUN --mount=type=cache,target=/var/cache/apk <<EOF
 
   apk add curl nodejs npm;
 EOF
+
+COPY uv.lock /app/uv.lock
+COPY pyproject.toml /app/pyproject.toml
 
 RUN --mount=type=cache,target=/root/.cache/uv <<EOF
   set -eux;
